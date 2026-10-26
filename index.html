@@ -5,136 +5,337 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="북스캔">
-<meta name="theme-color" content="#0e0f11">
+<meta name="theme-color" content="#F4F5F7">
 <title>북스캔</title>
-<link rel="apple-touch-icon" id="touchIcon">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <style>
-:root{--bg:#0e0f11;--card:#17191c;--line:#2a2d32;--tx:#eceef0;--sub:#8b9096;--acc:#3ddc84;--warn:#ffb020;--bad:#ff5a5a;--r:14px}
+:root{
+  --red:#D0112B;--red2:#E8243C;--redD:#A80C21;--redBg:#FDECEE;
+  --bg:#F4F5F7;--card:#fff;--tx:#15171C;--sub:#80868F;--sub2:#A7ACB3;--line:#ECEEF1;
+  --green:#18794E;--greenBg:#E8F5EE;--warn:#D98200;--warnBg:#FFF7DE;--warnLine:#F7C948;
+  --r:18px;--tab:62px;
+  --sb:env(safe-area-inset-bottom);--st:env(safe-area-inset-top);
+}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;height:100%;background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",system-ui,sans-serif;-webkit-user-select:none;user-select:none}
-button{font:inherit;color:inherit;border:0;background:var(--card);border-radius:12px;padding:12px 14px;cursor:pointer}
-button:active{opacity:.7}
-button.acc{background:var(--acc);color:#04210f;font-weight:700}
-button.ghost{background:transparent;border:1px solid var(--line)}
-button.bad{background:#3a1717;color:#ff8a8a}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--tx);font-family:Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",system-ui,sans-serif;-webkit-user-select:none;user-select:none;-webkit-font-smoothing:antialiased;overscroll-behavior:none}
+button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:pointer}
+button:active{opacity:.65}
 button:disabled{opacity:.35}
-.screen{position:fixed;inset:0;display:none;flex-direction:column;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+svg{display:block}
+#app{position:fixed;inset:0;display:flex;flex-direction:column}
+#screens{flex:1;position:relative;overflow:hidden}
+.screen{position:absolute;inset:0;display:none;flex-direction:column;padding-top:var(--st)}
 .screen.on{display:flex}
-header{display:flex;align-items:center;gap:10px;padding:14px 16px 8px}
-header h1{font-size:22px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-header button{padding:8px 12px}
-.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:8px 16px 24px}
-.sub{color:var(--sub);font-size:13px}
-.book{display:flex;gap:12px;align-items:center;background:var(--card);border-radius:var(--r);padding:12px;margin-bottom:10px}
-.book .cov{width:48px;height:64px;border-radius:6px;background:#222 center/cover;flex:none}
-.book .t{font-weight:600;font-size:16px}
-.empty{text-align:center;color:var(--sub);padding:60px 20px;line-height:1.6}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px}
-.pg{position:relative;background:#222;border-radius:8px;overflow:hidden;aspect-ratio:3/4}
-.pg img{width:100%;height:100%;object-fit:cover;display:block}
-.pg .n{position:absolute;left:4px;bottom:4px;background:#000a;font-size:11px;padding:2px 6px;border-radius:6px}
-.pg .o{position:absolute;right:4px;top:4px;background:var(--acc);color:#04210f;font-size:10px;font-weight:700;padding:1px 5px;border-radius:5px}
-.pg.ins::after{content:"";position:absolute;right:0;top:0;bottom:0;width:4px;background:var(--warn)}
-.bar{display:flex;gap:8px;padding:10px 16px;flex-wrap:wrap}
-.bar button{flex:1;min-width:30%}
-.banner{margin:0 16px 8px;background:#3a2c0b;color:#ffd27a;border-radius:10px;padding:10px 12px;font-size:13px;display:flex;align-items:center;gap:8px}
-.banner button{padding:6px 10px;font-size:12px;background:#0003}
-/* 스캔 */
-#scan{background:#000;padding:0}
-#vwrap{position:absolute;inset:0}
+.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:4px 20px 28px}
+/* 탭바 */
+#tabbar{height:calc(var(--tab) + var(--sb));padding-bottom:var(--sb);background:#fff;border-top:1px solid var(--line);display:flex;flex:none;z-index:10}
+#tabbar.off{display:none}
+#tabbar button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#6B7079;font-size:12px;font-weight:600}
+#tabbar button.on{color:var(--red)}
+#tabbar svg{width:25px;height:25px}
+/* 공통 */
+.top{display:flex;align-items:center;padding:14px 20px 10px;gap:8px;min-height:58px}
+.top h1{font-size:28px;font-weight:800;margin:0;flex:1;letter-spacing:-.5px}
+.top h2{font-size:19px;font-weight:800;margin:0;flex:1;text-align:center;letter-spacing:-.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ibtn{width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:12px;flex:none}
+.ibtn svg{width:26px;height:26px}
+.card{background:var(--card);border-radius:var(--r);box-shadow:0 1px 2px #0000000a,0 4px 16px #0000000a}
+.sub{color:var(--sub);font-size:14px}
+.btnRed{width:100%;height:58px;border-radius:16px;background:var(--red);color:#fff;font-size:19px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:12px;position:relative;box-shadow:0 6px 18px #d0112b33}
+.btnRed .chev{position:absolute;right:20px}
+.btnRed svg{width:24px;height:24px}
+.btnGray{width:100%;height:52px;border-radius:14px;background:#EEF0F3;font-size:16px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px}
+.empty{text-align:center;color:var(--sub);padding:56px 16px;line-height:1.7;font-size:15px}
+.secHead{display:flex;align-items:center;justify-content:space-between;margin:28px 2px 12px}
+.secHead h3{margin:0;font-size:21px;font-weight:800;letter-spacing:-.3px}
+.secHead button{color:var(--sub);font-size:15px;display:flex;align-items:center;gap:2px}
+/* 홈 */
+.hero{background:linear-gradient(135deg,#FDE6E9 0%,#FFF3F4 60%,#FDEBEE 100%);border-radius:22px;padding:24px 20px 20px;position:relative;overflow:hidden}
+.hero h2{margin:0;font-size:31px;line-height:1.25;font-weight:900;letter-spacing:-1px}
+.hero h2 em{font-style:normal;color:var(--red)}
+.hero p{margin:12px 0 22px;color:#5C6169;font-size:15px;line-height:1.55;max-width:60%}
+.hero .ill{position:absolute;right:6px;top:22px;width:150px;height:132px}
+.stat{display:flex;align-items:center;gap:14px;padding:16px 18px;margin-top:14px;width:100%;text-align:left}
+.stat .ic{width:52px;height:52px;border-radius:50%;border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;flex:none}
+.stat b{font-size:19px;font-weight:800}
+.bk{display:flex;gap:16px;padding:16px;margin-bottom:12px;align-items:stretch}
+.cov{width:76px;height:104px;border-radius:4px 8px 8px 4px;background:#e9e9ec center/cover no-repeat;flex:none;box-shadow:inset 3px 0 4px #0000001a,0 3px 8px #00000024}
+.bk .info{flex:1;min-width:0;display:flex;flex-direction:column}
+.bk .t{font-size:19px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.3px;padding-right:4px}
+.bk .d{color:var(--sub);font-size:15px;margin-top:5px}
+.bk .row{display:flex;align-items:center;gap:10px;margin-top:auto}
+.bar{flex:1;height:5px;background:#F0F1F3;border-radius:3px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--red);border-radius:3px}
+.bk .pct{font-size:15px;color:#4A4F57;font-weight:600;min-width:42px;text-align:right}
+.dots{width:34px;height:28px;display:flex;align-items:center;justify-content:center;color:#3c3f45;flex:none}
+.dots svg{width:22px;height:22px}
+.search{width:100%;height:46px;border-radius:12px;border:0;background:#fff;padding:0 14px;font:inherit;font-size:16px;margin-bottom:14px;-webkit-user-select:text;user-select:text;box-shadow:0 1px 2px #0000000a}
+/* 촬영 */
+#cam{background:#1C1916;padding-top:0}
+#camHead{position:absolute;left:0;right:0;top:0;z-index:3;padding:calc(var(--st) + 6px) 16px 12px;display:flex;align-items:center;background:linear-gradient(#1c1916f0,#1c1916c0);color:#fff}
+#camHead .mid{flex:1;text-align:center;min-width:0}
+#camHead .mid b{font-size:20px;font-weight:800;display:block}
+#camHead .mid span{font-size:12px;color:#ffffffa0;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#camHead .cnt{font-size:16px;font-weight:700;min-width:84px;text-align:right}
+#camHead .ibtn svg{width:28px;height:28px}
+#stage{position:absolute;left:0;right:0;top:0;bottom:150px;background:#000}
 #video,#ov{position:absolute;inset:0;width:100%;height:100%}
 #video{object-fit:contain}
-#ov{touch-action:none}
-#flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .25s}
-.stop{position:absolute;left:0;right:0;top:0;padding:calc(env(safe-area-inset-top) + 8px) 12px 8px;display:flex;gap:8px;align-items:center;background:linear-gradient(#000c,#0000)}
-.pill{background:#000a;border-radius:20px;padding:7px 12px;font-size:13px;font-weight:600;backdrop-filter:blur(6px)}
-.pill.ok{color:var(--acc)} .pill.wait{color:var(--warn)}
-.stop .sp{flex:1}
-.stop button{background:#000a;padding:8px 12px;font-size:14px}
-.sbot{position:absolute;left:0;right:0;bottom:0;padding:14px 18px calc(env(safe-area-inset-bottom) + 14px);display:flex;align-items:center;justify-content:space-between;background:linear-gradient(#0000,#000c)}
-.sbot .side{width:84px;display:flex;flex-direction:column;align-items:center;gap:6px}
-.tog{background:#000a;font-size:13px;padding:9px 0;width:84px;font-weight:600}
-.tog.on{background:var(--acc);color:#04210f}
-#shutter{width:76px;height:76px;border-radius:50%;background:#fff;border:5px solid #ffffff55;background-clip:padding-box;position:relative;padding:0}
-#ring{position:absolute;inset:-9px;pointer-events:none}
-#lastThumb{width:52px;height:68px;border-radius:6px;background:#222 center/cover;border:2px solid #fff6;padding:0}
-#cnt{font-size:12px;color:#ddd}
-#insTag{position:absolute;left:12px;top:calc(env(safe-area-inset-top) + 56px);background:#3a2c0bdd;color:#ffd27a;font-size:12px;padding:5px 10px;border-radius:8px;display:none}
-/* 시트 */
-.sheetBg{position:fixed;inset:0;background:#0008;display:none;z-index:50}
-.sheetBg.on{display:block}
-.sheet{position:absolute;left:0;right:0;bottom:0;background:#1b1d21;border-radius:18px 18px 0 0;padding:18px 16px calc(env(safe-area-inset-bottom) + 18px);max-height:85vh;overflow-y:auto}
-.sheet h3{margin:0 0 12px;font-size:17px}
-.opt{margin-bottom:14px}
-.opt .l{font-size:13px;color:var(--sub);margin-bottom:6px}
-.seg{display:flex;background:#0e0f11;border-radius:10px;padding:3px;gap:3px}
-.seg button{flex:1;padding:9px 4px;font-size:13px;background:transparent;border-radius:8px}
-.seg button.on{background:#2d3138;font-weight:700;color:var(--acc)}
-input[type=text]{width:100%;font:inherit;font-size:16px;padding:12px;border-radius:10px;border:1px solid var(--line);background:#0e0f11;color:var(--tx);-webkit-user-select:text;user-select:text}
-.prog{height:8px;background:#0e0f11;border-radius:4px;overflow:hidden;margin:12px 0 6px}
-.prog i{display:block;height:100%;width:0;background:var(--acc);transition:width .2s}
+#ov{touch-action:none;z-index:2}
+#flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .25s;z-index:2}
+#camPill{position:absolute;left:50%;transform:translateX(-50%);top:calc(var(--st) + 84px);z-index:3;background:#000000a6;color:#fff;border-radius:20px;padding:8px 14px;font-size:14px;font-weight:700;white-space:nowrap;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+#camPill.ok{color:#7CF0A8}#camPill.wait{color:#FFD27A}
+#chips{position:absolute;left:12px;right:12px;bottom:162px;z-index:3;display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.chip{background:#000000a6;color:#fff;border-radius:18px;padding:8px 13px;font-size:13px;font-weight:700;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.chip.on{background:#fff;color:var(--red)}
+.chip.ins{background:#3a2c0bdd;color:#ffd27a}
+#camBot{position:absolute;left:0;right:0;bottom:0;height:150px;background:#2E2925;display:flex;align-items:center;justify-content:space-between;padding:0 34px;z-index:3}
+#lastThumb{width:66px;height:66px;border-radius:10px;background:#3b3632 center/cover;border:2px solid #ffffffd0;position:relative}
+#lastThumb span{position:absolute;right:-8px;top:-8px;background:var(--red);color:#fff;font-size:11px;font-weight:800;border-radius:10px;padding:2px 6px;display:none}
+#shutter{width:92px;height:92px;border-radius:50%;position:relative;display:flex;align-items:center;justify-content:center}
+#shutter .in{width:70px;height:70px;border-radius:50%;background:var(--red);box-shadow:0 0 0 5px #1f1b18}
+#ring{position:absolute;inset:0}
+#btnTorch{width:66px;height:66px;border-radius:50%;border:1.5px solid #ffffff55;display:flex;align-items:center;justify-content:center;color:#fff}
+#btnTorch.on{background:#fff;color:#1c1916}
+#btnTorch svg{width:30px;height:30px}
+/* 정렬 */
+.banner{display:flex;gap:14px;align-items:center;border-radius:16px;padding:16px 18px;margin:2px 0 16px}
+.banner.ok{background:var(--greenBg)}
+.banner.run{background:#EEF2F7}
+.banner.err{background:var(--warnBg)}
+.banner .bi{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none}
+.banner.ok .bi{background:var(--green)} .banner.run .bi{background:#5B6B82} .banner.err .bi{background:var(--warn)}
+.banner .bi svg{width:26px;height:26px;color:#fff}
+.banner b{display:block;font-size:19px;font-weight:800;letter-spacing:-.3px}
+.banner.ok b{color:var(--green)}
+.banner span{display:block;color:#525861;font-size:14px;margin-top:3px;line-height:1.4}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.pg{border-radius:16px;background:#fff;overflow:hidden;box-shadow:0 1px 2px #0000000d,0 4px 14px #0000000a;border:2px solid transparent;position:relative}
+.pg .im{aspect-ratio:3/3.3;background:#F1F2F4;overflow:hidden;margin:0}
+.pg img{width:100%;height:100%;object-fit:cover;object-position:top;display:block}
+.pg .ft{display:flex;align-items:center;padding:10px 6px 12px 14px;gap:4px}
+.pg .lb{flex:1;font-size:17px;font-weight:700;letter-spacing:-.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pg .lb small{color:var(--sub2);font-weight:600;font-size:13px}
+.pg.check{border-color:var(--warnLine);background:var(--warnBg)}
+.pg.check .lb{color:var(--warn);display:flex;align-items:center;gap:6px}
+.pg.check .lb i{width:22px;height:22px;border-radius:50%;background:var(--warn);color:#fff;font-style:normal;font-size:14px;font-weight:900;display:flex;align-items:center;justify-content:center;flex:none}
+.pg .tag{position:absolute;top:8px;left:8px;background:#000000a0;color:#fff;font-size:11px;font-weight:700;padding:3px 7px;border-radius:7px}
+.pg .tagO{position:absolute;top:8px;right:8px;background:var(--green);color:#fff;font-size:11px;font-weight:800;padding:3px 7px;border-radius:7px}
+.insMark{grid-column:1/-1;display:flex;align-items:center;gap:8px;color:var(--warn);font-weight:700;font-size:14px}
+.insMark:before,.insMark:after{content:"";flex:1;height:2px;background:var(--warnLine)}
+.foot{padding:12px 20px 14px;background:linear-gradient(#f4f5f700,var(--bg) 30%)}
+.subhead{padding:0 20px 10px;color:var(--sub);font-size:14px;text-align:center;margin-top:-6px}
+/* 검수 */
+.sumRow{display:flex;gap:10px;margin-bottom:18px}
+.sumRow .card{flex:1;padding:14px 10px;text-align:center}
+.sumRow b{display:block;font-size:24px;font-weight:800}
+.sumRow span{font-size:13px;color:var(--sub)}
+.issue{display:flex;gap:12px;align-items:center;padding:12px;margin-bottom:10px}
+.issue .th{width:52px;height:64px;border-radius:8px;background:#eee center/cover;flex:none}
+.issue .tx{flex:1;min-width:0}
+.issue .tx b{display:block;font-size:16px;font-weight:800}
+.issue .tx span{font-size:13px;color:var(--sub);line-height:1.4;display:block;margin-top:2px}
+.sbtn{background:#EEF0F3;border-radius:10px;padding:9px 12px;font-size:14px;font-weight:700;white-space:nowrap}
+.sbtn.r{background:var(--redBg);color:var(--red)}
+.groupT{font-size:15px;font-weight:800;color:#4A4F57;margin:18px 2px 10px}
+/* 설정 */
+.set{padding:6px 0;margin-bottom:16px}
+.set .it{padding:14px 18px;border-bottom:1px solid var(--line)}
+.set .it:last-child{border-bottom:0}
+.set .lb{font-size:16px;font-weight:700;margin-bottom:10px}
+.set .ds{font-size:13px;color:var(--sub);margin-top:8px;line-height:1.5}
+.seg{display:flex;background:#F1F2F4;border-radius:11px;padding:3px;gap:3px}
+.seg button{flex:1;padding:9px 2px;font-size:14px;font-weight:600;border-radius:9px;color:#5c6169}
+.seg button.on{background:#fff;color:var(--red);font-weight:800;box-shadow:0 1px 3px #0000001a}
+.setRow{display:flex;align-items:center;justify-content:space-between;width:100%;text-align:left}
+.setH{font-size:14px;font-weight:800;color:var(--sub);margin:8px 6px 8px}
 /* 뷰어 */
-#viewer{background:#000}
+#viewer{background:#111}
+#viewer .top{color:#fff}
 #vimg{flex:1;min-height:0;object-fit:contain;width:100%}
-#toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 110px);transform:translateX(-50%);background:#000d;color:#fff;padding:10px 16px;border-radius:20px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:99;white-space:nowrap}
-#loading{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;z-index:100}
+.vbar{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:12px 14px calc(var(--sb) + 12px);background:#1b1b1d}
+.vbar button{color:#fff;font-size:12px;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:5px;padding:8px 0;border-radius:12px;background:#2a2a2e}
+.vbar button svg{width:22px;height:22px}
+.vbar button.bad{color:#ff8585}
+/* 시트 */
+.sheetBg{position:fixed;inset:0;background:#00000059;display:none;z-index:50}
+.sheetBg.on{display:block}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:22px 22px 0 0;padding:10px 20px calc(var(--sb) + 20px);max-height:88vh;overflow-y:auto;animation:up .22s ease}
+@keyframes up{from{transform:translateY(40px);opacity:.4}}
+.sheet .grab{width:40px;height:5px;border-radius:3px;background:#DCDFE3;margin:0 auto 14px}
+.sheet h3{margin:0 0 6px;font-size:20px;font-weight:800}
+.sheet .sd{color:var(--sub);font-size:14px;line-height:1.55;margin-bottom:12px}
+.menu button{display:flex;align-items:center;gap:14px;width:100%;padding:15px 4px;font-size:17px;font-weight:600;border-bottom:1px solid var(--line);text-align:left}
+.menu button:last-child{border-bottom:0}
+.menu button svg{width:22px;height:22px;color:#5c6169;flex:none}
+.menu button.bad{color:var(--red)} .menu button.bad svg{color:var(--red)}
+.inp{width:100%;font:inherit;font-size:17px;padding:14px;border-radius:12px;border:1.5px solid var(--line);background:#F7F8FA;color:var(--tx);-webkit-user-select:text;user-select:text;margin:6px 0 14px}
+.inp:focus{outline:0;border-color:var(--red)}
+.two{display:flex;gap:10px}
+.two>*{flex:1}
+.prog{height:8px;background:#F0F1F3;border-radius:4px;overflow:hidden;margin:14px 0 8px}
+.prog i{display:block;height:100%;width:0;background:var(--red);transition:width .2s}
+#toast{position:fixed;left:50%;bottom:calc(var(--sb) + 96px);transform:translateX(-50%);background:#15171Ce8;color:#fff;padding:11px 18px;border-radius:22px;font-size:14px;font-weight:600;opacity:0;transition:opacity .2s;pointer-events:none;z-index:99;max-width:88vw;text-align:center}
+#loading{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:100}
 #loading.off{display:none}
-.spin{width:30px;height:30px;border:3px solid var(--line);border-top-color:var(--acc);border-radius:50%;animation:sp 1s linear infinite}
+#loading img{width:84px;height:84px;border-radius:20px;box-shadow:0 8px 24px #d0112b40}
+.spin{width:22px;height:22px;border:3px solid #e3e5e8;border-top-color:var(--red);border-radius:50%;animation:sp 1s linear infinite;display:inline-block}
 @keyframes sp{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
+<div id="loading"><img src="apple-touch-icon.png" alt=""><div class="spin"></div></div>
 
-<div id="loading"><div class="spin"></div><div class="sub" id="loadMsg">스캔 엔진 불러오는 중… (처음 한 번만 오래 걸려)</div></div>
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3.5 10.2 12 3.5l8.5 6.7V20a1 1 0 0 1-1 1H15v-6.5H9V21H4.5a1 1 0 0 1-1-1z"/></symbol>
+    <symbol id="i-home-f" viewBox="0 0 24 24" fill="currentColor"><path d="M3 10 12 3l9 7v10a1.5 1.5 0 0 1-1.5 1.5H15v-6.5H9v6.5H4.5A1.5 1.5 0 0 1 3 20z"/></symbol>
+    <symbol id="i-cam" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 8.5A1.5 1.5 0 0 1 4.5 7h3l1.6-2.5h5.8L16.5 7h3A1.5 1.5 0 0 1 21 8.5v10a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.5z"/><circle cx="12" cy="13.3" r="3.8"/></symbol>
+    <symbol id="i-cam-f" viewBox="0 0 24 24"><path fill="currentColor" d="M3 8.5A1.5 1.5 0 0 1 4.5 7h3l1.6-2.5h5.8L16.5 7h3A1.5 1.5 0 0 1 21 8.5v10a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.5z"/><circle cx="12" cy="13.3" r="3.6" fill="#fff"/><circle cx="12" cy="13.3" r="1.8" fill="currentColor"/></symbol>
+    <symbol id="i-doc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M6 2.8h8.5L19 7.3V20a1.2 1.2 0 0 1-1.2 1.2H6A1.2 1.2 0 0 1 4.8 20V4A1.2 1.2 0 0 1 6 2.8z"/><path d="M14.3 3v4.4H19M8.5 12h7M8.5 16h7"/></symbol>
+    <symbol id="i-doc-f" viewBox="0 0 24 24"><path fill="currentColor" d="M6 2.5h8.6L19.5 7.4V20A1.5 1.5 0 0 1 18 21.5H6A1.5 1.5 0 0 1 4.5 20V4A1.5 1.5 0 0 1 6 2.5z"/><path d="M8.5 12.2h7M8.5 16h7" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M10.3 2.8h3.4l.5 2.6 1.6.9 2.5-.9 1.7 2.9-2 1.8v1.8l2 1.8-1.7 2.9-2.5-.9-1.6.9-.5 2.6h-3.4l-.5-2.6-1.6-.9-2.5.9-1.7-2.9 2-1.8v-1.8l-2-1.8 1.7-2.9 2.5.9 1.6-.9z"/><circle cx="12" cy="12" r="3.1"/></symbol>
+    <symbol id="i-gear-f" viewBox="0 0 24 24"><path fill="currentColor" d="M10.3 2.8h3.4l.5 2.6 1.6.9 2.5-.9 1.7 2.9-2 1.8v1.8l2 1.8-1.7 2.9-2.5-.9-1.6.9-.5 2.6h-3.4l-.5-2.6-1.6-.9-2.5.9-1.7-2.9 2-1.8v-1.8l-2-1.8 1.7-2.9 2.5.9 1.6-.9z"/><circle cx="12" cy="12" r="3" fill="#fff"/></symbol>
+    <symbol id="i-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 5 7 7-7 7"/></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 4-8 8 8 8"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 5l14 14M19 5 5 19"/></symbol>
+    <symbol id="i-dots" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></symbol>
+    <symbol id="i-book" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 6.5C10 5 7 4.5 3 5v13.5c4-.5 7 0 9 1.5 2-1.5 5-2 9-1.5V5c-4-.5-7 0-9 1.5zM12 6.5V20"/></symbol>
+    <symbol id="i-bolt" viewBox="0 0 24 24" fill="currentColor"><path d="M13.5 2 5 13.5h6L10 22l9-12h-6.2z"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.2" cy="6" r=".6" fill="currentColor"/><circle cx="4.2" cy="12" r=".6" fill="currentColor"/><circle cx="4.2" cy="18" r=".6" fill="currentColor"/></symbol>
+    <symbol id="i-share" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5M5 12v7.5A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5V12"/></symbol>
+    <symbol id="i-rot" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.4-5.7M20 4v4.5h-4.5"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5h16M9.5 6.5V4h5v2.5M6.5 6.5l.9 13a1.5 1.5 0 0 0 1.5 1.4h6.2a1.5 1.5 0 0 0 1.5-1.4l.9-13"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4"/></symbol>
+    <symbol id="i-ins" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v10M7.5 9.5 12 14l4.5-4.5M4 19h16"/></symbol>
+    <symbol id="i-move" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4v16M4 8l4-4 4 4M16 20V4M12 16l4 4 4-4"/></symbol>
+    <symbol id="i-img" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.8"/><path d="m3.5 17.5 5-5 4 4 3-3 5 5"/></symbol>
+    <symbol id="i-text" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M5 6V4.5h14V6M12 4.5V20M9 20h6"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></symbol>
+    <symbol id="i-star" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="m12 3.5 2.6 5.5 6 .7-4.4 4.1 1.2 5.9L12 16.8l-5.4 2.9 1.2-5.9-4.4-4.1 6-.7z"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+  </defs>
+</svg>
 
-<!-- 책장 -->
-<section class="screen on" id="lib">
-  <header><h1>📚 북스캔</h1><button id="btnImportAll" class="ghost">⚙︎</button></header>
-  <div class="scroll" id="bookList"></div>
-  <div class="bar"><button class="acc" id="btnNewBook">＋ 새 책</button></div>
-</section>
+<div id="app">
+<div id="screens">
 
-<!-- 책 상세 -->
-<section class="screen" id="bookv">
-  <header><button class="ghost" id="btnBack">‹</button><h1 id="bookTitle"></h1><button class="ghost" id="btnBookMenu">⋯</button></header>
-  <div class="sub" style="padding:0 16px 8px" id="bookInfo"></div>
-  <div id="insBanner"></div>
-  <div class="scroll"><div class="grid" id="pageGrid"></div></div>
-  <div class="bar">
-    <button class="acc" id="btnScan">📷 스캔</button>
-    <button id="btnOcr">🔤 OCR</button>
-    <button id="btnPdf">📄 PDF</button>
+<!-- 보관함 -->
+<section class="screen on" id="home">
+  <div class="top"><h1>북스캔</h1><button class="ibtn" data-go="settings" aria-label="설정"><svg><use href="#i-gear"/></svg></button></div>
+  <div class="scroll">
+    <div class="hero">
+      <h2>책을 <em>PDF</em>로,<br><em>간편하게</em></h2>
+      <p>책 한 권을 촬영해<br>깔끔한 PDF로 만들어보세요.</p>
+      <svg class="ill" viewBox="0 0 150 132" aria-hidden="true">
+        <defs>
+          <linearGradient id="gR" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F23A50"/><stop offset="1" stop-color="#B70C22"/></linearGradient>
+          <linearGradient id="gP" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#EDEDF0"/></linearGradient>
+          <filter id="fs" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="6" stdDeviation="5" flood-color="#A50B20" flood-opacity=".28"/></filter>
+        </defs>
+        <g filter="url(#fs)">
+          <path d="M8 98 72 118 142 92 142 100 72 127 8 106Z" fill="url(#gR)"/>
+          <path d="M10 96C30 86 52 90 72 112L72 118C52 97 30 93 10 102Z" fill="#E6E6EA"/>
+          <path d="M12 92C32 80 54 84 72 106L76 50C60 30 38 28 18 38Z" fill="url(#gP)"/>
+          <path d="M140 88C120 78 96 82 76 104L76 50C92 30 116 26 134 34Z" fill="url(#gP)"/>
+          <path d="M24 50l40 10M23 60l40 10M22 70l38 9M21 80l34 8M88 58l38-12M88 68l38-11M88 78l36-10M88 88l30-8" stroke="#D5D7DC" stroke-width="2.4" stroke-linecap="round"/>
+          <path d="M84 6h34l12 12v46a4 4 0 0 1-4 4H84a4 4 0 0 1-4-4V10a4 4 0 0 1 4-4z" fill="url(#gR)" transform="rotate(8 105 37)"/>
+          <path d="M118 6v8a4 4 0 0 0 4 4h8" fill="#ff8090" transform="rotate(8 105 37)"/>
+          <text x="105" y="52" text-anchor="middle" font-family="Pretendard,-apple-system,sans-serif" font-weight="900" font-size="15" fill="#fff" transform="rotate(8 105 37)">PDF</text>
+          <path d="M100 22c2 6 4 10 8 13-4 1-9 3-12 6m4-19c-2 7 2 14 9 17" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" transform="rotate(8 105 37)"/>
+        </g>
+      </svg>
+      <button class="btnRed" id="btnNewBook"><svg><use href="#i-cam-f"/></svg>새 책 스캔<svg class="chev"><use href="#i-chev"/></svg></button>
+    </div>
+    <button class="card stat" data-go="all">
+      <div class="ic"><svg width="28" height="28"><use href="#i-book"/></svg></div>
+      <div style="flex:1"><b id="totalPages">총 0페이지</b><div class="sub" style="margin-top:3px">지금까지 스캔한 페이지 수입니다.</div></div>
+      <svg width="22" height="22" style="color:#8a8f96"><use href="#i-chev"/></svg>
+    </button>
+    <div class="secHead"><h3>최근 작업</h3><button data-go="all">전체 보기<svg width="18" height="18"><use href="#i-chev"/></svg></button></div>
+    <div id="recent"></div>
   </div>
 </section>
 
-<!-- 스캔 -->
-<section class="screen" id="scan">
-  <div id="vwrap"><video id="video" playsinline muted autoplay></video><canvas id="ov"></canvas><div id="flash"></div></div>
-  <div class="stop">
-    <button id="btnScanClose">✕</button>
-    <span class="pill" id="status">카메라 준비 중</span>
-    <span class="sp"></span>
-    <button id="btnScanSet">⚙︎</button>
+<!-- 전체 보기 -->
+<section class="screen" id="all">
+  <div class="top"><button class="ibtn" data-go="home"><svg><use href="#i-back"/></svg></button><h2>전체 책</h2><span class="ibtn"></span></div>
+  <div class="scroll"><input class="search" id="searchIn" placeholder="책 제목 검색" type="search"><div id="allList"></div></div>
+</section>
+
+<!-- 촬영 -->
+<section class="screen" id="cam">
+  <div id="stage"><video id="video" playsinline muted autoplay></video><canvas id="ov"></canvas><div id="flash"></div></div>
+  <div id="camHead">
+    <button class="ibtn" id="btnCamClose" aria-label="닫기"><svg><use href="#i-x"/></svg></button>
+    <div class="mid"><b>책 촬영</b><span id="camBook"></span></div>
+    <div class="cnt" id="camCnt">0장 촬영</div>
   </div>
-  <div id="insTag"></div>
-  <div class="sbot">
-    <div class="side"><button id="lastThumb"></button><span id="cnt">0장</span></div>
-    <button id="shutter"><svg id="ring" viewBox="0 0 94 94"><circle cx="47" cy="47" r="44" fill="none" stroke="#3ddc84" stroke-width="5" stroke-dasharray="276.5" stroke-dashoffset="276.5" transform="rotate(-90 47 47)" id="ringC"/></svg></button>
-    <div class="side"><button class="tog on" id="btnAuto">자동</button><button class="tog" id="btnLock">🔓 고정</button></div>
+  <div id="camPill">카메라 준비 중</div>
+  <div id="chips">
+    <button class="chip on" id="chAuto">자동 촬영</button>
+    <button class="chip" id="chLock">네모 고정</button>
+    <button class="chip" id="chRot">↻ 0°</button>
+    <button class="chip" id="chSplit">양면</button>
+    <button class="chip ins" id="chIns" style="display:none"></button>
+  </div>
+  <div id="camBot">
+    <button id="lastThumb" aria-label="방금 찍은 장"><span id="undoTag">취소</span></button>
+    <button id="shutter" aria-label="촬영">
+      <svg id="ring" viewBox="0 0 92 92"><circle cx="46" cy="46" r="43" fill="none" stroke="#fff" stroke-width="5" opacity=".95" id="ringBase"/><circle cx="46" cy="46" r="43" fill="none" stroke="#FF5D70" stroke-width="5" stroke-linecap="round" stroke-dasharray="270.2" stroke-dashoffset="270.2" transform="rotate(-90 46 46)" id="ringC"/></svg>
+      <div class="in"></div>
+    </button>
+    <button id="btnTorch" aria-label="플래시"><svg><use href="#i-bolt"/></svg></button>
   </div>
 </section>
 
-<!-- 페이지 뷰어 -->
+<!-- 정렬 -->
+<section class="screen" id="sort">
+  <div class="top"><button class="ibtn" id="btnSortBack"><svg><use href="#i-back"/></svg></button><h2>페이지 정렬</h2><button class="ibtn" id="btnSortMenu"><svg><use href="#i-dots"/></svg></button></div>
+  <div class="subhead" id="sortSub"></div>
+  <div class="scroll" id="sortScroll"><div id="pnBanner"></div><div class="grid" id="pageGrid"></div></div>
+  <div class="foot" id="sortFoot"><button class="btnRed" id="btnReview"><svg><use href="#i-list"/></svg>순서 검수하기<svg class="chev"><use href="#i-chev"/></svg></button></div>
+</section>
+
+<!-- 검수 -->
+<section class="screen" id="review">
+  <div class="top"><button class="ibtn" id="btnRevBack"><svg><use href="#i-back"/></svg></button><h2>순서 검수</h2><span class="ibtn"></span></div>
+  <div class="scroll" id="revBody"></div>
+  <div class="foot"><button class="btnRed" id="btnRevPdf"><svg><use href="#i-share"/></svg>PDF 만들기<svg class="chev"><use href="#i-chev"/></svg></button></div>
+</section>
+
+<!-- 설정 -->
+<section class="screen" id="settings">
+  <div class="top"><h1>설정</h1></div>
+  <div class="scroll" id="setBody"></div>
+</section>
+
+<!-- 뷰어 -->
 <section class="screen" id="viewer">
-  <header><button class="ghost" id="btnVBack">‹</button><h1 id="vTitle" style="font-size:17px"></h1></header>
+  <div class="top"><button class="ibtn" id="btnVBack" style="color:#fff"><svg><use href="#i-back"/></svg></button><h2 id="vTitle" style="color:#fff"></h2><span class="ibtn"></span></div>
   <img id="vimg" alt="">
-  <div class="bar">
-    <button id="btnVPrev">◀ 앞으로</button><button id="btnVNext">뒤로 ▶</button><button id="btnVRot">↻ 회전</button>
-    <button id="btnVIns">⤵︎ 이 뒤에 이어찍기</button><button class="bad" id="btnVDel">삭제</button>
+  <div class="vbar">
+    <button id="vEdit"><svg><use href="#i-edit"/></svg>번호 수정</button>
+    <button id="vRot"><svg><use href="#i-rot"/></svg>회전</button>
+    <button id="vIns"><svg><use href="#i-ins"/></svg>이 뒤에 찍기</button>
+    <button id="vDel" class="bad"><svg><use href="#i-trash"/></svg>삭제</button>
   </div>
 </section>
+
+</div>
+<nav id="tabbar">
+  <button data-tab="home" class="on"><svg><use href="#i-home-f"/></svg>보관함</button>
+  <button data-tab="cam"><svg><use href="#i-cam"/></svg>촬영</button>
+  <button data-tab="sort"><svg><use href="#i-doc"/></svg>정렬</button>
+  <button data-tab="settings"><svg><use href="#i-gear"/></svg>설정</button>
+</nav>
+</div>
 
 <div class="sheetBg" id="sheetBg"><div class="sheet" id="sheet"></div></div>
 <div id="toast"></div>
@@ -324,22 +525,121 @@ function resizeMax(m, maxW) {
 
 </script>
 <script>
+// ===== 쪽 번호 추론 =====
+// pns: 페이지 순서대로 [{v:number|null, conf, src} | undefined(아직 인식 전)]
+// 반환: { items:[{label, status:'ok'|'inferred'|'check'|'none'|'pending', reason}], gaps:[{after, from, to}], dups:[[i,j]], unsorted:bool, stats }
+function inferPages(pns) {
+  const n = pns.length;
+  const det = pns.map(p => (p && p.v != null ? p : null));
+  const off = det.map((d, i) => (d ? d.v - i : null));
+  const confirmed = new Array(n).fill(false);
+  for (let i = 0; i < n; i++) {
+    if (!det[i]) continue;
+    if (det[i].src === 'manual') { confirmed[i] = true; continue; }
+    let support = 0, others = 0;
+    for (let j = Math.max(0, i - 4); j <= Math.min(n - 1, i + 4); j++) {
+      if (j === i || !det[j]) continue;
+      others++;
+      if (off[j] === off[i]) support++;
+    }
+    if (support > 0) confirmed[i] = true;
+    else if (others === 0 && det[i].conf >= 75) confirmed[i] = true; // 주변에 비교할 게 없는 단독 인식
+  }
+  const nearest = (i, dir) => { for (let j = i + dir; j >= 0 && j < n; j += dir) if (confirmed[j]) return j; return -1; };
+  const items = [];
+  for (let i = 0; i < n; i++) {
+    const p = pns[i];
+    if (p === undefined) { items.push({ label: null, status: 'pending', reason: '' }); continue; }
+    if (confirmed[i]) { items.push({ label: det[i].v, status: 'ok', reason: '' }); continue; }
+    const L = nearest(i, -1), R = nearest(i, 1);
+    const oL = L >= 0 ? off[L] : null, oR = R >= 0 ? off[R] : null;
+    if (det[i]) {
+      items.push({ label: det[i].v, status: 'check', kind: 'misread', reason: '인식한 번호가 앞뒤 페이지와 안 맞아' });
+    } else if (oL != null && oR != null) {
+      if (oL === oR) items.push({ label: i + oL, status: 'inferred', reason: '' });
+      else items.push({ label: i + oL, status: 'check', kind: 'unknown', reason: '번호를 못 읽었고 앞뒤 사이가 안 맞아' });
+    } else if (oL != null || oR != null) {
+      items.push({ label: i + (oL != null ? oL : oR), status: 'inferred', reason: '' });
+    } else items.push({ label: null, status: 'none', reason: '' });
+  }
+  // 음수/0 라벨은 무효
+  items.forEach(it => { if (it.label != null && it.label < 1) { it.label = null; if (it.status === 'inferred') it.status = 'none'; } });
+  // 중복 / 역순 / 빠짐
+  const gaps = [], dups = [], seen = new Map();
+  let unsorted = false, prev = -1;
+  for (let i = 0; i < n; i++) {
+    const it = items[i];
+    if (it.label == null) continue;
+    if (seen.has(it.label) && it.status !== 'check') {
+      dups.push([seen.get(it.label), i]);
+      it.status = 'check'; it.kind = 'dup'; it.reason = '같은 페이지가 두 번 찍힌 것 같아';
+      continue;
+    }
+    if (it.status === 'check') continue;
+    if (prev >= 0 && it.label < items[prev].label) {
+      unsorted = true; it.status = 'check'; it.kind = 'order'; it.reason = '앞 페이지보다 번호가 작아 (순서 뒤바뀜)';
+      seen.set(it.label, i);
+      continue;
+    }
+    seen.set(it.label, i); prev = i;
+  }
+  // 빠진 번호: 믿을 만한(확인 필요 아닌) 번호들 기준
+  const present = new Set(), where = new Map();
+  items.forEach((it, i) => { if (it.label != null && (it.status !== 'check' || it.kind === 'order' || it.kind === 'dup')) { if (!where.has(it.label) || it.kind !== 'dup') where.set(it.label, i); present.add(it.label); } });
+  if (present.size) {
+    const lo = Math.min(...present), hi = Math.max(...present);
+    let st = null;
+    for (let v = lo; v <= hi + 1; v++) {
+      const miss = v <= hi && !present.has(v);
+      if (miss && st == null) st = v;
+      if (!miss && st != null) {
+        if (v - st <= 60) gaps.push({ after: where.get(st - 1), from: st, to: v - 1 });
+        st = null;
+      }
+    }
+  }
+  const stats = { total: n, pending: 0, ok: 0, inferred: 0, check: 0, none: 0 };
+  items.forEach(it => stats[it.status]++);
+  return { items, gaps, dups, unsorted, stats };
+}
+
+// 검출 단어들 중 쪽 번호 후보 고르기. words: [{text, confidence, bbox:{x0,x1,y0,y1}}], W: 크롭 폭, pos: 'bottom'|'top'
+function pickPageNumber(words, W, pos) {
+  const out = [];
+  for (const w of words || []) {
+    const raw = (w.text || '').trim();
+    const t = raw.replace(/[-–—.·,()\[\]\s|]/g, '');
+    if (!/^\d{1,4}$/.test(t)) continue;
+    const v = +t; if (!v) continue;
+    const cx = (w.bbox.x0 + w.bbox.x1) / 2 / W;
+    const edge = cx < 0.25 || cx > 0.75 ? 1 : (cx > 0.38 && cx < 0.62 ? 0.95 : 0.5);
+    out.push({ v, conf: w.confidence, score: w.confidence * edge * (pos === 'bottom' ? 1 : 0.92) });
+  }
+  out.sort((a, b) => b.score - a.score);
+  return out[0] || null;
+}
+
+
+</script>
+<script>
 "use strict";
 // ================= 유틸 =================
 const $ = id => document.getElementById(id);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-const DPI = 200; // PDF 페이지 크기 기준
-function toast(msg, ms = 1800) { const t = $('toast'); t.textContent = msg; t.style.opacity = 1; clearTimeout(toast._t); toast._t = setTimeout(() => t.style.opacity = 0, ms); }
-function show(id) { document.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.id === id)); }
-function loadScript(src) { return new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.async = true; s.onload = res; s.onerror = () => rej(new Error('load ' + src)); document.head.appendChild(s); }); }
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const DPI = 200;
+const fmtDate = t => new Date(t).toLocaleString('ko-KR', { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+function toast(msg, ms = 2000) { const t = $('toast'); t.textContent = msg; t.style.opacity = 1; clearTimeout(toast._t); toast._t = setTimeout(() => t.style.opacity = 0, ms); }
+function loadScript(src) { return new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.async = true; s.onload = res; s.onerror = () => rej(new Error('불러오기 실패')); document.head.appendChild(s); }); }
+const icon = (id, size = 22) => `<svg width="${size}" height="${size}"><use href="#${id}"/></svg>`;
 
 // ================= 설정 =================
-const DEF = { split: 'auto', rot: 0, maxW: 1600, mode: 'color', hold: 900, sound: true };
+const DEF = { split: 'auto', rot: 0, maxW: 1600, mode: 'color', hold: 900, sound: true, autoCap: true, pnAuto: true };
 let S = { ...DEF };
 try { S = { ...DEF, ...JSON.parse(localStorage.getItem('bs_set') || '{}') }; } catch (e) {}
 function saveSet() { try { localStorage.setItem('bs_set', JSON.stringify(S)); } catch (e) {} }
+function lastBookId(v) { try { if (v !== undefined) localStorage.setItem('bs_last', v); return localStorage.getItem('bs_last'); } catch (e) { return null; } }
 
 // ================= IndexedDB =================
 let db;
@@ -349,8 +649,7 @@ function openDB() {
     r.onupgradeneeded = () => {
       const d = r.result;
       d.createObjectStore('books', { keyPath: 'id' });
-      const p = d.createObjectStore('pages', { keyPath: 'id' });
-      p.createIndex('book', 'bookId');
+      d.createObjectStore('pages', { keyPath: 'id' }).createIndex('book', 'bookId');
     };
     r.onsuccess = () => { db = r.result; res(); };
     r.onerror = () => rej(r.error);
@@ -358,8 +657,8 @@ function openDB() {
 }
 function tx(store, mode, fn) {
   return new Promise((res, rej) => {
-    const t = db.transaction(store, mode); const st = t.objectStore(store);
-    let out; const rq = fn(st); if (rq) rq.onsuccess = () => out = rq.result;
+    const t = db.transaction(store, mode); let out; const rq = fn(t.objectStore(store));
+    if (rq) rq.onsuccess = () => out = rq.result;
     t.oncomplete = () => res(out); t.onerror = () => rej(t.error); t.onabort = () => rej(t.error);
   });
 }
@@ -370,219 +669,470 @@ const getPage = id => tx('pages', 'readonly', s => s.get(id));
 const putPage = p => tx('pages', 'readwrite', s => s.put(p));
 const delPage = id => tx('pages', 'readwrite', s => s.delete(id));
 const bookPages = bid => tx('pages', 'readonly', s => s.index('book').getAll(bid));
+async function pagesInOrder(b) { const m = Object.fromEntries((await bookPages(b.id)).map(p => [p.id, p])); b.order = b.order.filter(id => m[id]); return b.order.map(id => m[id]); }
 
-// ================= OpenCV 로드 =================
-let cvReady = false;
-async function initCV() {
-  const srcs = ['https://cdn.jsdelivr.net/npm/@techstark/opencv-js@4.10.0-release.1/dist/opencv.js', 'https://docs.opencv.org/4.10.0/opencv.js'];
-  for (const s of srcs) { try { await loadScript(s); break; } catch (e) { console.warn(e); } }
-  if (typeof cv === 'undefined') throw new Error('OpenCV 로드 실패');
-  // 주의: cv는 thenable이라 await 하면 안 됨
-  await new Promise(res => {
-    if (cv.Mat) return res();
-    cv.onRuntimeInitialized = () => res();
-    const iv = setInterval(() => { if (cv.Mat) { clearInterval(iv); res(); } }, 150);
+// ================= 화면 전환 =================
+let curBook = null, curScreen = 'home';
+const TAB_OF = { home: 'home', all: 'home', cam: 'cam', sort: 'sort', review: 'sort', settings: 'settings', viewer: 'sort' };
+const TAB_ICON = { home: 'i-home', cam: 'i-cam', sort: 'i-doc', settings: 'i-gear' };
+function show(id) {
+  if (curScreen === 'cam' && id !== 'cam') stopScan();
+  curScreen = id;
+  document.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.id === id));
+  $('tabbar').classList.toggle('off', id === 'viewer' || id === 'review');
+  const tab = TAB_OF[id];
+  document.querySelectorAll('#tabbar button').forEach(b => {
+    const on = b.dataset.tab === tab; b.classList.toggle('on', on);
+    b.querySelector('use').setAttribute('href', '#' + TAB_ICON[b.dataset.tab] + (on ? '-f' : ''));
   });
-  cvReady = true;
+  document.querySelector('meta[name=theme-color]').content = id === 'cam' ? '#1C1916' : id === 'viewer' ? '#111111' : '#F4F5F7';
+  if (id === 'home') renderHome();
+  if (id === 'all') renderAll();
+  if (id === 'settings') renderSettings();
+  pnKick();
 }
+document.addEventListener('click', e => { const g = e.target.closest('[data-go]'); if (g) show(g.dataset.go); });
+document.querySelectorAll('#tabbar button').forEach(b => b.onclick = () => goTab(b.dataset.tab));
+async function goTab(t) {
+  if (t === 'home' || t === 'settings') return show(t);
+  if (!curBook) { const id = lastBookId(); if (id) curBook = await getBook(id); }
+  if (!curBook) return pickBook(t);
+  if (t === 'cam') startScan(); else openSort(curBook.id);
+}
+async function setCur(b) { curBook = b; lastBookId(b.id); }
 
-// ================= 책장 =================
-let curBook = null;
-async function renderLib() {
-  const books = (await allBooks()).sort((a, b) => b.updated - a.updated);
-  const el = $('bookList');
-  if (!books.length) { el.innerHTML = '<div class="empty">아직 책이 없어.<br>＋ 새 책 눌러서 시작해.<br><br><span class="sub">팁: 공유 버튼 → "홈 화면에 추가" 하면 앱처럼 써.</span></div>'; return; }
-  el.innerHTML = '';
-  for (const b of books) {
-    const d = document.createElement('div'); d.className = 'book';
-    let cov = '';
-    if (b.order.length) { const p = await getPage(b.order[0]); if (p) cov = URL.createObjectURL(p.thumb); }
-    d.innerHTML = `<div class="cov" style="background-image:url(${cov})"></div><div style="flex:1;min-width:0"><div class="t">${esc(b.title)}</div><div class="sub">${b.order.length}쪽 · ${new Date(b.updated).toLocaleDateString('ko-KR')}</div></div><div class="sub">›</div>`;
-    d.onclick = () => openBook(b.id);
-    el.appendChild(d);
-  }
-}
-$('btnNewBook').onclick = () => askText('새 책 이름', '', async t => {
-  const b = { id: uid(), title: t || '제목 없음', created: Date.now(), order: [], insertAt: null };
-  await putBook(b); openBook(b.id);
-});
-
-// ================= 책 상세 =================
-let thumbUrls = [];
-async function openBook(id) {
-  curBook = await getBook(id); show('bookv'); await renderBook();
-}
-async function renderBook() {
-  const b = curBook; $('bookTitle').textContent = b.title;
-  thumbUrls.forEach(u => URL.revokeObjectURL(u)); thumbUrls = [];
-  const pages = Object.fromEntries((await bookPages(b.id)).map(p => [p.id, p]));
-  b.order = b.order.filter(id => pages[id]);
-  const ocrN = b.order.filter(id => pages[id].ocrPdf).length;
-  $('bookInfo').textContent = `${b.order.length}쪽 · OCR ${ocrN}/${b.order.length}`;
-  const ins = b.insertAt;
-  $('insBanner').innerHTML = ins != null ? `<div class="banner">⤵︎ 다음 스캔은 ${ins}쪽 뒤에 끼워 넣어져<span style="flex:1"></span><button id="btnInsOff">해제</button></div>` : '';
-  if (ins != null) $('btnInsOff').onclick = async () => { b.insertAt = null; await putBook(b); renderBook(); };
-  const g = $('pageGrid'); g.innerHTML = '';
-  if (!b.order.length) g.innerHTML = '<div class="empty" style="grid-column:1/-1">📷 스캔 눌러서 찍어봐</div>';
-  b.order.forEach((pid, i) => {
-    const p = pages[pid]; const u = URL.createObjectURL(p.thumb); thumbUrls.push(u);
-    const d = document.createElement('div'); d.className = 'pg' + (ins === i + 1 ? ' ins' : '');
-    d.innerHTML = `<img src="${u}" loading="lazy"><span class="n">${i + 1}</span>${p.ocrPdf ? '<span class="o">T</span>' : ''}`;
-    d.onclick = () => openViewer(i);
-    g.appendChild(d);
-  });
-}
-$('btnBack').onclick = () => { show('lib'); renderLib(); };
-$('btnBookMenu').onclick = () => sheet(`<h3>${esc(curBook.title)}</h3>
-  <div class="bar" style="padding:0;flex-direction:column">
-  <button id="mRen">이름 바꾸기</button>
-  <button id="mImp">🖼 사진 앨범에서 불러오기</button>
-  <button id="mTxt">텍스트(.txt)로 내보내기 (OCR된 쪽만)</button>
-  <button id="mOcrClr">OCR 결과 지우기</button>
-  <button class="bad" id="mDel">책 삭제</button></div>`, () => {
-  $('mRen').onclick = () => askText('이름 바꾸기', curBook.title, async t => { curBook.title = t || curBook.title; await putBook(curBook); renderBook(); });
-  $('mImp').onclick = () => { closeSheet(); $('fileIn').click(); };
-  $('mTxt').onclick = () => { closeSheet(); exportTxt(); };
-  $('mOcrClr').onclick = async () => { if (!confirm('OCR 결과를 전부 지울까?')) return; for (const id of curBook.order) { const p = await getPage(id); p.ocrPdf = null; p.text = null; await putPage(p); } closeSheet(); renderBook(); };
-  $('mDel').onclick = async () => { if (!confirm(`"${curBook.title}" 를 통째로 지울까? 되돌릴 수 없어.`)) return; for (const id of curBook.order) await delPage(id); await tx('books', 'readwrite', s => s.delete(curBook.id)); closeSheet(); show('lib'); renderLib(); };
-});
-
-// ================= 시트/입력 =================
-function sheet(html, bind) { $('sheet').innerHTML = html; $('sheetBg').classList.add('on'); bind && bind(); }
+// ================= 시트 =================
+let sheetLocked = false;
+function sheet(html, bind) { $('sheet').innerHTML = '<div class="grab"></div>' + html; $('sheetBg').classList.add('on'); bind && bind(); }
 function closeSheet() { $('sheetBg').classList.remove('on'); }
-$('sheetBg').onclick = e => { if (e.target.id === 'sheetBg' && !sheet.locked) closeSheet(); };
-function askText(title, val, cb) {
-  sheet(`<h3>${title}</h3><input type="text" id="askIn" value="${esc(val)}"><div class="bar" style="padding:12px 0 0"><button class="ghost" id="askNo">취소</button><button class="acc" id="askOk">확인</button></div>`, () => {
-    const i = $('askIn'); setTimeout(() => i.focus(), 50);
+$('sheetBg').onclick = e => { if (e.target.id === 'sheetBg' && !sheetLocked) closeSheet(); };
+function askText(title, val, cb, { type = 'text', ph = '', desc = '' } = {}) {
+  sheet(`<h3>${title}</h3>${desc ? `<div class="sd">${desc}</div>` : ''}<input class="inp" id="askIn" type="${type}" inputmode="${type === 'number' ? 'numeric' : 'text'}" placeholder="${esc(ph)}" value="${esc(val)}"><div class="two"><button class="btnGray" id="askNo">취소</button><button class="btnRed" style="height:52px;font-size:17px" id="askOk">확인</button></div>`, () => {
+    const i = $('askIn'); setTimeout(() => { i.focus(); i.select && i.select(); }, 60);
     $('askNo').onclick = closeSheet;
     $('askOk').onclick = () => { closeSheet(); cb(i.value.trim()); };
     i.onkeydown = e => { if (e.key === 'Enter') $('askOk').click(); };
   });
 }
-function segOpt(label, key, opts) {
-  return `<div class="opt"><div class="l">${label}</div><div class="seg" data-k="${key}">${opts.map(([v, t]) => `<button data-v="${v}" class="${String(S[key]) === String(v) ? 'on' : ''}">${t}</button>`).join('')}</div></div>`;
-}
-function openSettings() {
-  sheet(`<h3>스캔 설정</h3>
-    ${segOpt('양면 분리', 'split', [['auto', '자동(접힘선)'], ['center', '정가운데'], ['single', '분리 안 함']])}
-    ${segOpt('회전 (책이 옆으로 누워 보이면)', 'rot', [[0, '0°'], [90, '90°'], [180, '180°'], [270, '270°']])}
-    ${segOpt('색상', 'mode', [['color', '컬러'], ['gray', '흑백 선명'], ['bw', '문서(2색)']])}
-    ${segOpt('화질 (쪽 가로 픽셀)', 'maxW', [[1200, '1200 가벼움'], [1600, '1600 표준'], [2400, '2400 고화질']])}
-    ${segOpt('자동촬영 정지 대기', 'hold', [[600, '0.6초'], [900, '0.9초'], [1400, '1.4초']])}
-    ${segOpt('촬영음', 'sound', [[true, '켜기'], [false, '끄기']])}
-    <div class="sub" style="line-height:1.5">팁: 책장 넘기는 손이 화면에서 빠지고 멈추면 자동으로 찍혀. 배경이 책이랑 비슷한 색이면 네모를 못 찾을 수 있으니 어두운 천을 깔거나, 모서리를 손으로 맞추고 <b>고정</b> 눌러.</div>
-    <div class="bar" style="padding:12px 0 0"><button class="acc" id="setOk">닫기</button></div>`, () => {
-    $('sheet').querySelectorAll('.seg').forEach(sg => sg.onclick = e => {
-      const b = e.target.closest('button'); if (!b) return;
-      let v = b.dataset.v; const k = sg.dataset.k;
-      S[k] = typeof DEF[k] === 'number' ? +v : typeof DEF[k] === 'boolean' ? v === 'true' : v;
-      sg.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); saveSet();
-    });
-    $('setOk').onclick = closeSheet;
+function menu(title, items) {
+  sheet(`${title ? `<h3 style="margin-bottom:4px">${esc(title)}</h3>` : ''}<div class="menu">${items.map((it, k) => `<button data-k="${k}" class="${it.bad ? 'bad' : ''}">${icon(it.ic)}${it.t}</button>`).join('')}</div>`, () => {
+    $('sheet').querySelectorAll('.menu button').forEach(b => b.onclick = () => { closeSheet(); items[+b.dataset.k].fn(); });
   });
 }
-$('btnImportAll').onclick = openSettings;
+
+// ================= 책 =================
+async function newBook(then = 'cam') {
+  askText('새 책 이름', '', async t => {
+    const b = { id: uid(), title: t || '제목 없는 책', created: Date.now(), order: [], insertAt: null, coverId: null };
+    await putBook(b); await setCur(b);
+    if (then === 'cam') startScan(); else openSort(b.id);
+  }, { ph: '예) 사회학개론' });
+}
+$('btnNewBook').onclick = () => newBook('cam');
+async function pickBook(then) {
+  const books = (await allBooks()).sort((a, b) => b.updated - a.updated);
+  if (!books.length) return newBook(then);
+  sheet(`<h3>어떤 책에서 할까?</h3><div class="menu">${books.slice(0, 8).map(b => `<button data-id="${b.id}">${icon('i-book')}<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(b.title)}</span><span class="sub">${b.order.length}쪽</span></button>`).join('')}<button id="pkNew" style="color:var(--red)">${icon('i-cam')}새 책 만들기</button></div>`, () => {
+    $('sheet').querySelectorAll('[data-id]').forEach(el => el.onclick = async () => { closeSheet(); await setCur(await getBook(el.dataset.id)); goTab(then); });
+    $('pkNew').onclick = () => { closeSheet(); newBook(then); };
+  });
+}
+const urlCache = new Map();
+function blobUrl(key, blob) { if (!urlCache.has(key)) urlCache.set(key, URL.createObjectURL(blob)); return urlCache.get(key); }
+function dropUrl(key) { const u = urlCache.get(key); if (u) { URL.revokeObjectURL(u); urlCache.delete(key); } }
+async function bookMeta(b) {
+  const pages = await pagesInOrder(b);
+  const cid = (b.coverId && b.order.includes(b.coverId)) ? b.coverId : b.order[0];
+  const cp = pages.find(p => p.id === cid);
+  const ocr = pages.filter(p => p.ocrPdf).length;
+  return { n: pages.length, cover: cp ? blobUrl('t' + cp.id + (cp.v || 0), cp.thumb) : '', pct: pages.length ? Math.round(ocr / pages.length * 100) : 0 };
+}
+function bookCard(b, m) {
+  return `<div class="card bk" data-book="${b.id}"><div class="cov" style="background-image:url('${m.cover}')"></div>
+    <div class="info"><div style="display:flex;align-items:flex-start"><div class="t" style="flex:1">${esc(b.title)}</div><button class="dots" data-bmenu="${b.id}" aria-label="메뉴">${icon('i-dots')}</button></div>
+    <div class="d">${fmtDate(b.updated)}</div><div class="d" style="margin-top:2px">${m.n}페이지</div>
+    <div class="row"><div class="bar"><i style="width:${m.pct}%"></i></div><span class="pct">${m.pct}%</span></div></div></div>`;
+}
+function bindBookCards(el) {
+  el.querySelectorAll('[data-book]').forEach(c => c.onclick = e => {
+    if (e.target.closest('[data-bmenu]')) return;
+    openSort(c.dataset.book);
+  });
+  el.querySelectorAll('[data-bmenu]').forEach(btn => btn.onclick = async e => { e.stopPropagation(); bookMenu(await getBook(btn.dataset.bmenu)); });
+}
+async function renderHome() {
+  const books = (await allBooks()).sort((a, b) => b.updated - a.updated);
+  $('totalPages').textContent = `총 ${books.reduce((s, b) => s + b.order.length, 0).toLocaleString()}페이지`;
+  const el = $('recent');
+  if (!books.length) { el.innerHTML = `<div class="empty">아직 스캔한 책이 없어요.<br>위의 <b style="color:var(--red)">새 책 스캔</b>으로 시작해보세요.<br><br><span style="font-size:13px">Safari 공유 버튼 → 홈 화면에 추가하면 앱처럼 쓸 수 있어요.</span></div>`; return; }
+  let h = ''; for (const b of books.slice(0, 5)) h += bookCard(b, await bookMeta(b));
+  el.innerHTML = h; bindBookCards(el);
+}
+async function renderAll() {
+  const q = $('searchIn').value.trim().toLowerCase();
+  const books = (await allBooks()).sort((a, b) => b.updated - a.updated).filter(b => !q || b.title.toLowerCase().includes(q));
+  let h = ''; for (const b of books) h += bookCard(b, await bookMeta(b));
+  $('allList').innerHTML = h || '<div class="empty">책이 없어요</div>'; bindBookCards($('allList'));
+}
+$('searchIn').oninput = () => renderAll();
+function bookMenu(b) {
+  menu(b.title, [
+    { ic: 'i-cam', t: '이어서 촬영', fn: async () => { await setCur(b); startScan(); } },
+    { ic: 'i-doc', t: '페이지 정렬', fn: () => openSort(b.id) },
+    { ic: 'i-share', t: 'PDF 만들기', fn: async () => { await setCur(b); exportPdf(); } },
+    { ic: 'i-text', t: '검색용 글자 OCR', fn: async () => { await setCur(b); ocrSheet(); } },
+    { ic: 'i-doc', t: '텍스트(.txt) 내보내기', fn: async () => { await setCur(b); exportTxt(); } },
+    { ic: 'i-img', t: '앨범 사진으로 추가', fn: async () => { await setCur(b); $('fileIn').click(); } },
+    { ic: 'i-edit', t: '이름 바꾸기', fn: () => askText('이름 바꾸기', b.title, async t => { if (t) { b.title = t; await putBook(b); refreshCur(); } }) },
+    { ic: 'i-trash', t: '책 삭제', bad: true, fn: async () => {
+      if (!confirm(`"${b.title}"을(를) 통째로 지울까? 되돌릴 수 없어.`)) return;
+      for (const p of await bookPages(b.id)) await delPage(p.id);
+      await tx('books', 'readwrite', s => s.delete(b.id));
+      if (curBook && curBook.id === b.id) { curBook = null; lastBookId(''); }
+      show('home');
+    } },
+  ]);
+}
+function refreshCur() { if (curScreen === 'sort') renderSort(); else if (curScreen === 'home') renderHome(); else if (curScreen === 'all') renderAll(); }
+
+// ================= 정렬 =================
+let sortPages = [], inferRes = null;
+async function openSort(id) { await setCur(await getBook(id)); show('sort'); await renderSort(); }
+$('btnSortBack').onclick = () => show('home');
+$('btnSortMenu').onclick = () => bookMenu(curBook);
+async function computeInfer() {
+  sortPages = await pagesInOrder(curBook);
+  inferRes = inferPages(sortPages.map(p => p.pn));
+  return inferRes;
+}
+function labelOf(i) {
+  const it = inferRes && inferRes.items[i];
+  if (!it) return `${i + 1}번째`;
+  if (it.status === 'pending') return `${i + 1}번째 <small>· 번호 인식 중</small>`;
+  if (it.label == null) return `${i + 1}번째`;
+  return `${it.label}페이지${it.status === 'inferred' ? ' <small>추정</small>' : ''}`;
+}
+async function renderSort() {
+  const b = curBook; if (!b) return;
+  await computeInfer();
+  $('sortSub').textContent = `${b.title} · ${sortPages.length}장`;
+  renderBanner();
+  const g = $('pageGrid'); g.innerHTML = '';
+  if (!sortPages.length) {
+    g.innerHTML = `<div class="empty" style="grid-column:1/-1">아직 찍은 페이지가 없어요<br><br><button class="btnRed" style="height:50px;font-size:17px" id="emptyScan">${icon('i-cam-f')}촬영 시작</button></div>`;
+    $('emptyScan').onclick = () => startScan(); $('sortFoot').style.display = 'none'; return;
+  }
+  $('sortFoot').style.display = '';
+  const frag = document.createDocumentFragment();
+  sortPages.forEach((p, i) => {
+    if (b.insertAt === i && i > 0) { const m = document.createElement('div'); m.className = 'insMark'; m.textContent = '⤵︎ 다음 촬영은 여기에 끼워져'; frag.appendChild(m); }
+    const d = document.createElement('div'); d.className = 'pg'; d.dataset.i = i;
+    d.innerHTML = `<div class="im"><img loading="lazy" src="${blobUrl('t' + p.id + (p.v || 0), p.thumb)}"></div>${b.coverId === p.id ? '<span class="tag">표지</span>' : ''}${p.ocrPdf ? '<span class="tagO">T</span>' : ''}<div class="ft"><div class="lb"></div><button class="dots" aria-label="메뉴">${icon('i-dots')}</button></div>`;
+    d.onclick = e => { if (e.target.closest('.dots')) pageMenu(+d.dataset.i); else openViewer(+d.dataset.i); };
+    frag.appendChild(d);
+  });
+  if (b.insertAt != null && b.insertAt >= sortPages.length) { const m = document.createElement('div'); m.className = 'insMark'; m.textContent = '⤵︎ 다음 촬영은 맨 뒤'; }
+  g.appendChild(frag);
+  updateLabels();
+}
+function updateLabels() {
+  document.querySelectorAll('#pageGrid .pg').forEach(d => {
+    const i = +d.dataset.i, it = inferRes.items[i];
+    const chk = it && it.status === 'check';
+    d.classList.toggle('check', chk);
+    d.querySelector('.lb').innerHTML = chk ? `<i>!</i><span style="line-height:1.15">${it.label != null ? it.label + '페이지' : (i + 1) + '번째'}<br><small style="color:var(--warn);font-size:13px">확인 필요</small></span>` : labelOf(i);
+  });
+}
+function renderBanner() {
+  const st = inferRes.stats, el = $('pnBanner');
+  if (!sortPages.length) { el.innerHTML = ''; return; }
+  if (!S.pnAuto) { el.innerHTML = ''; return; }
+  if (pnError) { el.innerHTML = `<div class="banner err"><div class="bi">${icon('i-search', 26)}</div><div><b>페이지 번호 인식 대기</b><span>인식 엔진을 못 불러왔어. 인터넷 연결되면 자동으로 다시 해.</span></div></div>`; return; }
+  if (st.pending) { const done = st.total - st.pending; el.innerHTML = `<div class="banner run"><div class="bi"><span class="spin" style="border-color:#ffffff55;border-top-color:#fff"></span></div><div style="flex:1"><b>페이지 번호 인식 중… ${done}/${st.total}</b><span>각 페이지 번호를 읽어서 순서를 확인하고 있어요.</span><div class="prog" style="margin:8px 0 0;height:5px"><i style="width:${done / st.total * 100}%"></i></div></div></div>`; return; }
+  const issues = st.check + inferRes.gaps.length;
+  el.innerHTML = `<div class="banner ok"><div class="bi">${icon('i-check', 26)}</div><div><b>OCR 자동 인식 완료</b><span>각 페이지의 내용을 분석하여 자동으로 인식했어요.${issues ? ` <b style="display:inline;font-size:14px;color:var(--warn)">확인 필요 ${issues}건</b>` : ''}</span></div></div>`;
+}
+function pageMenu(i) {
+  const p = sortPages[i]; const it = inferRes.items[i];
+  menu(`${it && it.label != null ? it.label + '페이지' : (i + 1) + '번째 장'}${it && it.status === 'check' ? ' · ' + it.reason : ''}`, [
+    { ic: 'i-eye', t: '크게 보기', fn: () => openViewer(i) },
+    { ic: 'i-edit', t: '페이지 번호 수정', fn: () => editPn(i) },
+    { ic: 'i-ins', t: '이 뒤에 이어 찍기', fn: () => insertAfter(i, true) },
+    { ic: 'i-move', t: '위치 옮기기', fn: () => movePrompt(i) },
+    { ic: 'i-rot', t: '90° 회전', fn: async () => { await rotatePage(p.id); renderSort(); } },
+    { ic: 'i-star', t: '표지로 설정', fn: async () => { curBook.coverId = p.id; await putBook(curBook); renderSort(); toast('표지로 설정했어'); } },
+    { ic: 'i-trash', t: '삭제', bad: true, fn: async () => { if (confirm('이 장을 지울까?')) { await removePages([p.id]); renderSort(); } } },
+  ]);
+}
+function editPn(i, after) {
+  const p = sortPages[i], it = inferRes.items[i];
+  askText('페이지 번호 수정', it && it.label != null ? it.label : '', async v => {
+    p.pn = v === '' ? { v: null, conf: 100, src: 'manual' } : { v: Math.max(1, parseInt(v, 10) || 1), conf: 100, src: 'manual' };
+    await putPage(p); await computeInfer();
+    if (curScreen === 'sort') { renderBanner(); updateLabels(); } else if (curScreen === 'review') renderReview(); else if (curScreen === 'viewer') renderViewer();
+    after && after();
+  }, { type: 'number', ph: '비우면 번호 없음', desc: '책에 인쇄된 번호를 적어줘. 앞뒤 번호도 이 기준으로 다시 맞춰져.' });
+}
+async function insertAfter(i, goCam) {
+  curBook.insertAt = i + 1; await putBook(curBook);
+  if (goCam) startScan(); else { toast(`${i + 1}번째 뒤에 이어서 찍혀`); renderSort(); }
+}
+function movePrompt(i) {
+  askText('위치 옮기기', String(i + 1), async v => {
+    let j = parseInt(v, 10); if (!j) return; j = Math.max(1, Math.min(sortPages.length, j)) - 1;
+    const o = curBook.order; const [id] = o.splice(i, 1); o.splice(j, 0, id); await putBook(curBook); renderSort();
+  }, { type: 'number', desc: `몇 번째 자리로 옮길까? (1 ~ ${sortPages.length})` });
+}
+async function removePages(ids) {
+  const b = curBook;
+  for (const id of ids) {
+    const idx = b.order.indexOf(id); if (idx < 0) continue;
+    await delPage(id); b.order.splice(idx, 1);
+    if (b.insertAt != null && b.insertAt > idx) b.insertAt--;
+    if (b.coverId === id) b.coverId = null;
+  }
+  if (b.insertAt != null && b.insertAt >= b.order.length) b.insertAt = null;
+  await putBook(b);
+}
+async function rotatePage(id) {
+  const p = await getPage(id);
+  const bmp = await createImageBitmap(p.img); const c = document.createElement('canvas'); c.width = bmp.height; c.height = bmp.width;
+  const x = c.getContext('2d'); x.translate(c.width, 0); x.rotate(Math.PI / 2); x.drawImage(bmp, 0, 0); bmp.close && bmp.close();
+  p.img = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.88)); p.thumb = await thumbOf(c); p.w = c.width; p.h = c.height;
+  p.ocrPdf = null; p.text = null; if (!p.pn || p.pn.src !== 'manual') p.pn = undefined; p.v = (p.v || 0) + 1;
+  await putPage(p); pnKick();
+}
+
+// ================= 순서 검수 =================
+$('btnReview').onclick = async () => { show('review'); await renderReview(); };
+$('btnRevBack').onclick = () => { show('sort'); renderSort(); };
+$('btnRevPdf').onclick = () => exportPdf();
+async function renderReview() {
+  await computeInfer();
+  const r = inferRes, st = r.stats, P = sortPages, el = $('revBody');
+  const th = i => `<div class="th" style="background-image:url('${blobUrl('t' + P[i].id + (P[i].v || 0), P[i].thumb)}')"></div>`;
+  let h = `<div class="sumRow"><div class="card"><b>${st.total}</b><span>전체</span></div><div class="card"><b style="color:var(--green)">${st.ok + st.inferred}</b><span>번호 확인</span></div><div class="card"><b style="color:${st.check + r.gaps.length ? 'var(--warn)' : 'var(--tx)'}">${st.check + r.gaps.length}</b><span>확인 필요</span></div></div>`;
+  if (st.pending) h += `<div class="banner run" style="margin-bottom:12px"><div class="bi"><span class="spin" style="border-color:#ffffff55;border-top-color:#fff"></span></div><div><b style="font-size:16px">아직 ${st.pending}장 인식 중</b><span>끝나면 검수 결과가 더 정확해져.</span></div></div>`;
+  if (r.unsorted) h += `<div class="groupT">순서가 섞였어요</div><div class="card issue"><div class="tx"><b>페이지 번호 순으로 정렬</b><span>읽은 번호 기준으로 전체 순서를 자동으로 다시 맞춰.</span></div><button class="sbtn r" id="rvSort">자동 정렬</button></div>`;
+  if (r.gaps.length) {
+    h += `<div class="groupT">빠진 페이지</div>`;
+    r.gaps.forEach((gp, k) => {
+      const range = gp.from === gp.to ? `${gp.from}페이지` : `${gp.from}~${gp.to}페이지`;
+      h += `<div class="card issue">${gp.after != null ? th(gp.after) : ''}<div class="tx"><b>${range}가 없어요</b><span>${gp.after != null ? (r.items[gp.after].label) + '페이지 뒤에 끼워 찍을 수 있어.' : ''}</span></div>${gp.after != null ? `<button class="sbtn r" data-gap="${k}">이어 찍기</button>` : ''}</div>`;
+    });
+  }
+  const dupIdx = new Set(r.dups.map(d => d[1]));
+  if (r.dups.length) {
+    h += `<div class="groupT">중복으로 찍힌 것 같아요</div>`;
+    r.dups.forEach(([a, b2]) => { h += `<div class="card issue">${th(a)}${th(b2)}<div class="tx"><b>${r.items[a].label}페이지 ×2</b><span>${a + 1}번째, ${b2 + 1}번째 장</span></div><button class="sbtn" data-deldup="${b2}">뒤의 것 삭제</button></div>`; });
+  }
+  const checks = r.items.map((it, i) => [it, i]).filter(([it, i]) => it.status === 'check' && !dupIdx.has(i) && !(r.unsorted && it.kind === 'order'));
+  if (checks.length) {
+    h += `<div class="groupT">번호 확인 필요</div>`;
+    checks.forEach(([it, i]) => { h += `<div class="card issue">${th(i)}<div class="tx"><b>${it.label != null ? it.label + '페이지?' : (i + 1) + '번째 장'}</b><span>${it.reason}</span></div><div style="display:flex;flex-direction:column;gap:6px"><button class="sbtn r" data-edit="${i}">번호 수정</button><button class="sbtn" data-view="${i}">보기</button></div></div>`; });
+  }
+  if (!st.pending && !r.unsorted && !r.gaps.length && !r.dups.length && !checks.length) {
+    h += `<div class="empty"><div style="width:72px;height:72px;border-radius:50%;background:var(--greenBg);color:var(--green);display:flex;align-items:center;justify-content:center;margin:0 auto 16px">${icon('i-check', 38)}</div><b style="color:var(--tx);font-size:19px">순서 문제 없어요</b><br>${st.none ? `번호가 안 보이는 장 ${st.none}개는 찍은 순서대로 둘게.` : '바로 PDF로 만들어도 돼.'}</div>`;
+  }
+  el.innerHTML = h;
+  const rs = $('rvSort'); if (rs) rs.onclick = async () => { await autoSort(); renderReview(); toast('번호 순으로 정렬했어'); };
+  el.querySelectorAll('[data-gap]').forEach(btn => btn.onclick = () => { const gp = r.gaps[+btn.dataset.gap]; insertAfter(gp.after, true); });
+  el.querySelectorAll('[data-deldup]').forEach(btn => btn.onclick = async () => { await removePages([P[+btn.dataset.deldup].id]); renderReview(); });
+  el.querySelectorAll('[data-edit]').forEach(btn => btn.onclick = () => editPn(+btn.dataset.edit));
+  el.querySelectorAll('[data-view]').forEach(btn => btn.onclick = () => openViewer(+btn.dataset.view, 'review'));
+}
+async function autoSort() {
+  // 번호 있는 장은 번호순, 번호 없는 장은 바로 앞 장에 붙여서 이동
+  const r = inferRes, P = sortPages; const groups = []; let cur = null;
+  P.forEach((p, i) => {
+    const it = r.items[i]; const key = it.label != null && it.kind !== 'misread' && it.kind !== 'unknown' ? it.label : null;
+    if (key != null || !cur) { cur = { key: key ?? (cur ? cur.key : -1), ids: [], i }; groups.push(cur); }
+    cur.ids.push(p.id);
+  });
+  groups.sort((a, b) => (a.key - b.key) || (a.i - b.i));
+  curBook.order = groups.flatMap(g => g.ids); curBook.insertAt = null; await putBook(curBook); await computeInfer();
+}
+
+// ================= 뷰어 =================
+let vIdx = 0, vFrom = 'sort';
+async function openViewer(i, from = 'sort') { vIdx = i; vFrom = from; show('viewer'); await renderViewer(); }
+async function renderViewer() {
+  await computeInfer();
+  if (!sortPages.length) return backFromViewer();
+  vIdx = Math.max(0, Math.min(vIdx, sortPages.length - 1));
+  const p = sortPages[vIdx], it = inferRes.items[vIdx];
+  $('vimg').src = blobUrl('i' + p.id + (p.v || 0), p.img);
+  $('vTitle').textContent = `${it && it.label != null ? it.label + '페이지' : (vIdx + 1) + '번째'} · ${vIdx + 1}/${sortPages.length}${it && it.status === 'check' ? ' ⚠︎' : ''}`;
+}
+function backFromViewer() { if (vFrom === 'review') { show('review'); renderReview(); } else { show('sort'); renderSort(); } }
+$('btnVBack').onclick = backFromViewer;
+$('vEdit').onclick = () => editPn(vIdx);
+$('vRot').onclick = async () => { await rotatePage(sortPages[vIdx].id); renderViewer(); };
+$('vIns').onclick = () => insertAfter(vIdx, true);
+$('vDel').onclick = async () => { if (!confirm('이 장을 지울까?')) return; await removePages([sortPages[vIdx].id]); renderViewer(); };
+let sx0 = null;
+$('vimg').addEventListener('touchstart', e => sx0 = e.touches[0].clientX, { passive: true });
+$('vimg').addEventListener('touchend', e => { if (sx0 == null) return; const dx = e.changedTouches[0].clientX - sx0; sx0 = null; if (Math.abs(dx) > 60) { vIdx += dx < 0 ? 1 : -1; renderViewer(); } });
+
+// ================= 설정 =================
+function seg(key, opts) { return `<div class="seg" data-k="${key}">${opts.map(([v, t]) => `<button data-v="${v}" class="${String(S[key]) === String(v) ? 'on' : ''}">${t}</button>`).join('')}</div>`; }
+async function renderSettings() {
+  let used = '';
+  try { const e = await navigator.storage.estimate(); used = `${(e.usage / 1048576).toFixed(0)}MB 사용 중`; } catch (e) {}
+  const books = await allBooks();
+  $('setBody').innerHTML = `
+  <div class="setH">촬영</div>
+  <div class="card set">
+    <div class="it"><div class="lb">자동 촬영</div>${seg('autoCap', [[true, '켜기'], [false, '끄기']])}<div class="ds">네모가 잡히고 화면이 멈추면 자동으로 찍어. 책장 넘기는 손이 지나가면 다음 장을 기다려.</div></div>
+    <div class="it"><div class="lb">멈춤 대기 시간</div>${seg('hold', [[600, '0.6초'], [900, '0.9초'], [1400, '1.4초'], [2000, '2초']])}</div>
+    <div class="it"><div class="lb">촬영음</div>${seg('sound', [[true, '켜기'], [false, '끄기']])}</div>
+  </div>
+  <div class="setH">이미지</div>
+  <div class="card set">
+    <div class="it"><div class="lb">양면 분리</div>${seg('split', [['auto', '자동(접힘선)'], ['center', '정가운데'], ['single', '한 쪽씩']])}<div class="ds">펼친 책을 한 번에 찍으면 왼쪽·오른쪽 쪽으로 나눠서 저장해.</div></div>
+    <div class="it"><div class="lb">회전</div>${seg('rot', [[0, '0°'], [90, '90°'], [180, '180°'], [270, '270°']])}<div class="ds">카메라 화면에서 책이 옆으로 누워 보이면 바꿔줘.</div></div>
+    <div class="it"><div class="lb">색상</div>${seg('mode', [['color', '컬러'], ['gray', '흑백'], ['bw', '문서(2색)']])}</div>
+    <div class="it"><div class="lb">화질 (쪽 가로 픽셀)</div>${seg('maxW', [[1200, '가벼움'], [1600, '표준'], [2400, '고화질']])}</div>
+  </div>
+  <div class="setH">페이지 번호</div>
+  <div class="card set">
+    <div class="it"><div class="lb">자동 인식</div>${seg('pnAuto', [[true, '켜기'], [false, '끄기']])}<div class="ds">찍은 쪽의 아래·위 가장자리에서 인쇄된 번호를 읽어서 빠진 쪽, 중복, 순서 섞임을 찾아줘.</div></div>
+    <div class="it"><button class="setRow" id="stRedo"><span style="font-weight:700">현재 책 번호 다시 인식</span>${icon('i-chev')}</button></div>
+  </div>
+  <div class="setH">저장공간</div>
+  <div class="card set">
+    <div class="it"><div class="setRow"><span style="font-weight:700">책 ${books.length}권 · ${books.reduce((s, b) => s + b.order.length, 0)}쪽</span><span class="sub">${used}</span></div><div class="ds">사진은 이 폰의 Safari 저장공간에 있어. 다 만든 책은 PDF로 내보내 두고 지워도 돼. 홈 화면 앱과 Safari 탭은 저장공간이 따로야.</div></div>
+  </div>
+  <div class="setH">정보</div>
+  <div class="card set"><div class="it"><div class="ds" style="margin-top:0">북스캔 v2 · 글자 OCR을 더 빠르고 정확하게 하려면 PC의 bookscan_ocr.py로 PDF를 처리해. 직접 산 책을 개인적으로 보는 용도로만 써줘.</div></div></div>`;
+  $('setBody').querySelectorAll('.seg').forEach(sg => sg.onclick = e => {
+    const b = e.target.closest('button'); if (!b) return;
+    const k = sg.dataset.k, v = b.dataset.v;
+    S[k] = typeof DEF[k] === 'number' ? +v : typeof DEF[k] === 'boolean' ? v === 'true' : v;
+    sg.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); saveSet();
+    if (k === 'pnAuto' && S.pnAuto) pnKick();
+  });
+  $('stRedo').onclick = async () => {
+    if (!curBook) return toast('먼저 책을 하나 열어줘');
+    if (!confirm(`"${curBook.title}"의 번호를 다시 인식할까? (직접 고친 번호는 유지)`)) return;
+    for (const p of await bookPages(curBook.id)) if (!p.pn || p.pn.src !== 'manual') { p.pn = undefined; await putPage(p); }
+    pnError = false; pnKick(); toast('다시 인식 시작');
+  };
+}
+
+// ================= OpenCV =================
+let cvReady = false, cvLoading = null;
+function initCV() {
+  if (cvLoading) return cvLoading;
+  return cvLoading = (async () => {
+    for (const s of ['https://cdn.jsdelivr.net/npm/@techstark/opencv-js@4.10.0-release.1/dist/opencv.js', 'https://docs.opencv.org/4.10.0/opencv.js']) { try { await loadScript(s); break; } catch (e) {} }
+    if (typeof cv === 'undefined') { cvLoading = null; throw new Error('스캔 엔진 로드 실패'); }
+    await new Promise(res => { if (cv.Mat) return res(); cv.onRuntimeInitialized = res; const iv = setInterval(() => { if (cv.Mat) { clearInterval(iv); res(); } }, 150); });
+    cvReady = true;
+  })();
+}
 
 // ================= 페이지 저장 =================
-function matToBlob(m, q = 0.85) {
-  const c = document.createElement('canvas'); cv.imshow(c, m);
-  return new Promise(r => c.toBlob(b => r({ blob: b, canvas: c }), 'image/jpeg', q));
-}
+function matToBlob(m, q = 0.86) { const c = document.createElement('canvas'); cv.imshow(c, m); return new Promise(r => c.toBlob(b => r({ blob: b, canvas: c }), 'image/jpeg', q)); }
 function thumbOf(canvas) {
-  const w = 200, h = Math.round(canvas.height * w / canvas.width);
-  const c = document.createElement('canvas'); c.width = w; c.height = h;
-  c.getContext('2d').drawImage(canvas, 0, 0, w, h);
-  return new Promise(r => c.toBlob(r, 'image/jpeg', 0.7));
+  const w = 300, h = Math.round(canvas.height * w / canvas.width);
+  const c = document.createElement('canvas'); c.width = w; c.height = h; c.getContext('2d').drawImage(canvas, 0, 0, w, h);
+  return new Promise(r => c.toBlob(r, 'image/jpeg', 0.72));
 }
-// 펴진 양면 Mat -> 페이지들 저장, 새 페이지 id 배열 반환
 async function savePagesFromWarp(warped) {
-  let m = rotateMat(warped, S.rot);
-  const parts = splitPages(m, S.split);
+  const parts = splitPages(rotateMat(warped, S.rot), S.split);
   const ids = [];
   for (let p of parts) {
-    p = resizeMax(p, S.maxW);
-    p = enhance(p, S.mode);
+    p = enhance(resizeMax(p, S.maxW), S.mode);
     const { blob, canvas } = await matToBlob(p);
-    const page = { id: uid(), bookId: curBook.id, img: blob, thumb: await thumbOf(canvas), w: p.cols, h: p.rows, ocrPdf: null, text: null };
-    p.delete();
+    const page = { id: uid(), bookId: curBook.id, img: blob, thumb: await thumbOf(canvas), w: p.cols, h: p.rows, ocrPdf: null, text: null, pn: S.pnAuto ? undefined : null };
+    p.delete(); canvas.width = 0;
     await putPage(page); ids.push(page.id);
   }
   const b = curBook;
-  if (b.insertAt != null) { b.order.splice(b.insertAt, 0, ...ids); b.insertAt += ids.length; }
-  else b.order.push(...ids);
+  if (b.insertAt != null) { b.order.splice(b.insertAt, 0, ...ids); b.insertAt += ids.length; } else b.order.push(...ids);
   await putBook(b);
   return ids;
 }
 
-// ================= 스캔 =================
+// ================= 촬영 =================
 const video = $('video'), ov = $('ov'), octx = ov.getContext('2d');
 const proc = document.createElement('canvas'), pctx = proc.getContext('2d', { willReadFrequently: true });
 const tiny = document.createElement('canvas'), tctx = tiny.getContext('2d', { willReadFrequently: true });
-const TW = 96;
-let stream = null, running = false, busy = false;
-let quad = null, quadSeen = 0, lastDet = null, jitter = 99, locked = false, autoOn = true;
+const TW = 96, TH = 72, STILL = 2.2, MOVE = 7, PAGE_DIFF = 4;
+let stream = null, running = false, busy = false, torchOn = false;
+let quad = null, quadSeen = 0, lastDet = null, jitter = 99, locked = false;
 let moveTicks = 0, prevTiny = null, capTiny = null, stillMs = 0, sawMove = false, lastTick = 0, lastCap = 0, firstCap = true;
-let sessionStack = [], sessionCount = 0, drag = -1, wakeLock = null, actx = null;
+let sessionStack = [], drag = -1, wakeLock = null, actx = null;
 
 async function getWake() { try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch (e) {} }
 function dropWake() { try { wakeLock && wakeLock.release(); } catch (e) {} wakeLock = null; }
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && (running || ocrRunning)) getWake(); });
-
 function beep() {
   if (!S.sound || !actx) return;
   try { const o = actx.createOscillator(), g = actx.createGain(); o.frequency.value = 1320; g.gain.setValueAtTime(.15, actx.currentTime); g.gain.exponentialRampToValueAtTime(.001, actx.currentTime + .12); o.connect(g).connect(actx.destination); o.start(); o.stop(actx.currentTime + .13); } catch (e) {}
 }
+function setPill(t, cls) { const s = $('camPill'); if (s.textContent !== t) s.textContent = t; s.className = cls || ''; }
+function updChips() {
+  $('chAuto').classList.toggle('on', S.autoCap); $('chAuto').textContent = S.autoCap ? '자동 촬영' : '수동 촬영';
+  $('chLock').classList.toggle('on', locked); $('chLock').textContent = locked ? '🔒 네모 고정됨' : '네모 고정';
+  $('chRot').textContent = `↻ ${S.rot}°`;
+  $('chSplit').textContent = { auto: '양면 자동', center: '양면 가운데', single: '한 쪽씩' }[S.split];
+  const ins = curBook && curBook.insertAt != null;
+  $('chIns').style.display = ins ? '' : 'none';
+  if (ins) $('chIns').textContent = `⤵︎ ${curBook.insertAt}번째 뒤에 끼워넣는 중 ✕`;
+}
+async function updCamHead() { $('camBook').textContent = curBook ? curBook.title : ''; $('camCnt').textContent = `${curBook ? curBook.order.length : 0}장 촬영`; }
+$('chAuto').onclick = () => { S.autoCap = !S.autoCap; saveSet(); stillMs = 0; updChips(); };
+$('chLock').onclick = () => { if (!quad) { setDefaultQuad(); toast('모서리를 끌어서 책에 맞춰줘'); } locked = !locked; updChips(); };
+$('chRot').onclick = () => { S.rot = (S.rot + 90) % 360; saveSet(); updChips(); };
+$('chSplit').onclick = () => { S.split = { auto: 'center', center: 'single', single: 'auto' }[S.split]; saveSet(); updChips(); };
+$('chIns').onclick = async () => { curBook.insertAt = null; await putBook(curBook); updChips(); toast('맨 뒤에 이어 찍어'); };
 
-$('btnScan').onclick = startScan;
 async function startScan() {
-  if (!cvReady) { toast('엔진 아직 로딩 중…'); return; }
+  if (!curBook) return pickBook('cam');
+  show('cam'); updCamHead(); updChips(); setPill('스캔 엔진 준비 중…', 'wait');
   try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); actx.resume(); } catch (e) {}
-  show('scan'); setStatus('카메라 켜는 중', '');
-  const tries = [
-    { width: { ideal: 4032 }, height: { ideal: 3024 } },
-    { width: { ideal: 3840 }, height: { ideal: 2160 } },
-    { width: { ideal: 1920 }, height: { ideal: 1080 } }];
-  for (const t of tries) {
+  try { await initCV(); } catch (e) { setPill('스캔 엔진을 못 불러왔어 (인터넷 확인)', 'wait'); return; }
+  if (curScreen !== 'cam') return;
+  setPill('카메라 켜는 중…', 'wait');
+  for (const t of [{ width: { ideal: 4032 }, height: { ideal: 3024 } }, { width: { ideal: 3840 }, height: { ideal: 2160 } }, { width: { ideal: 1920 }, height: { ideal: 1080 } }]) {
     try { stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' }, ...t }, audio: false }); break; } catch (e) { stream = null; }
   }
-  if (!stream) { setStatus('카메라 권한이 필요해', 'wait'); toast('설정 > Safari > 카메라 허용 확인해줘', 3500); return; }
+  if (!stream) { setPill('카메라 권한이 필요해', 'wait'); toast('설정 > Safari > 카메라 허용 확인해줘', 3500); return; }
+  if (curScreen !== 'cam') { stream.getTracks().forEach(t => t.stop()); stream = null; return; }
   video.srcObject = stream; await video.play().catch(() => {});
   await new Promise(r => { if (video.videoWidth) r(); else video.onloadedmetadata = r; });
   const vw = video.videoWidth, vh = video.videoHeight, sc = 480 / Math.max(vw, vh);
   proc.width = Math.round(vw * sc); proc.height = Math.round(vh * sc);
-  quad = null; quadSeen = 0; lastDet = null; locked = false; prevTiny = null; capTiny = null; stillMs = 0; sawMove = false; firstCap = true;
-  sessionStack = []; sessionCount = 0; updLock(); updAuto(); $('cnt').textContent = '0장'; $('lastThumb').style.backgroundImage = '';
-  $('insTag').style.display = curBook.insertAt != null ? 'block' : 'none';
-  $('insTag').textContent = `⤵︎ ${curBook.insertAt}쪽 뒤에 끼워넣는 중`;
-  running = true; getWake(); resizeOv(); loop();
+  quad = null; quadSeen = 0; lastDet = null; locked = false; prevTiny = null; capTiny = null; stillMs = 0; sawMove = false; moveTicks = 0; firstCap = true; torchOn = false;
+  sessionStack = []; $('lastThumb').style.backgroundImage = ''; $('undoTag').style.display = 'none'; $('btnTorch').classList.remove('on');
+  updChips(); running = true; getWake(); resizeOv(); requestAnimationFrame(loop);
 }
 function stopScan() {
   running = false; dropWake();
   if (stream) stream.getTracks().forEach(t => t.stop()); stream = null; video.srcObject = null;
+  setTimeout(pnKick, 300);
 }
-$('btnScanClose').onclick = () => { stopScan(); show('bookv'); renderBook(); };
-$('btnScanSet').onclick = openSettings;
-$('btnAuto').onclick = () => { autoOn = !autoOn; updAuto(); stillMs = 0; };
-$('btnLock').onclick = () => { if (!quad) { toast('네모가 아직 없어. 화면에서 모서리를 끌어 맞춰도 돼'); setDefaultQuad(); } locked = !locked; updLock(); };
-function updAuto() { $('btnAuto').classList.toggle('on', autoOn); $('btnAuto').textContent = autoOn ? '자동 ON' : '자동 OFF'; }
-function updLock() { $('btnLock').classList.toggle('on', locked); $('btnLock').textContent = locked ? '🔒 고정됨' : '🔓 고정'; }
-function setStatus(t, cls) { const s = $('status'); s.textContent = t; s.className = 'pill ' + (cls || ''); }
-function setDefaultQuad() { const W = proc.width, H = proc.height, m = 0.1; quad = [{ x: W * m, y: H * m }, { x: W * (1 - m), y: H * m }, { x: W * (1 - m), y: H * (1 - m) }, { x: W * m, y: H * (1 - m) }]; }
-$('shutter').onclick = () => capture(true);
+$('btnCamClose').onclick = () => openSort(curBook.id);
+$('shutter').onclick = () => capture();
+$('btnTorch').onclick = async () => {
+  const t = stream && stream.getVideoTracks()[0]; if (!t) return;
+  const caps = t.getCapabilities ? t.getCapabilities() : {};
+  if (!caps.torch) return toast('이 기기/브라우저에선 플래시 제어가 안 돼');
+  try { torchOn = !torchOn; await t.applyConstraints({ advanced: [{ torch: torchOn }] }); $('btnTorch').classList.toggle('on', torchOn); }
+  catch (e) { torchOn = false; toast('플래시를 켤 수 없어'); }
+};
 $('lastThumb').onclick = async () => {
   if (!sessionStack.length) return;
-  if (!confirm('방금 찍은 거 지울까?')) return;
-  const ids = sessionStack.pop();
-  for (const id of ids) await delPage(id);
-  curBook.order = curBook.order.filter(id => !ids.includes(id));
-  if (curBook.insertAt != null) curBook.insertAt -= ids.length;
-  await putBook(curBook); sessionCount -= ids.length; $('cnt').textContent = sessionCount + '장';
-  const lastIds = sessionStack[sessionStack.length - 1];
-  if (lastIds) { const p = await getPage(lastIds[lastIds.length - 1]); $('lastThumb').style.backgroundImage = `url(${URL.createObjectURL(p.thumb)})`; } else $('lastThumb').style.backgroundImage = '';
-  capTiny = null; firstCap = true; toast('삭제했어');
+  if (!confirm('방금 찍은 장을 지울까?')) return;
+  await removePages(sessionStack.pop());
+  updCamHead(); updChips();
+  const last = sessionStack[sessionStack.length - 1];
+  if (last) { const p = await getPage(last[last.length - 1]); $('lastThumb').style.backgroundImage = `url(${blobUrl('t' + p.id + (p.v || 0), p.thumb)})`; }
+  else { $('lastThumb').style.backgroundImage = ''; $('undoTag').style.display = 'none'; }
+  capTiny = null; firstCap = true; toast('지웠어');
 };
-
-// 화면 <-> proc 좌표 변환 (object-fit: contain)
 function dispRect() {
   const W = ov.clientWidth, H = ov.clientHeight, ar = proc.width / proc.height;
   let w = W, h = W / ar; if (h > H) { h = H; w = H * ar; }
@@ -590,60 +1140,68 @@ function dispRect() {
 }
 function resizeOv() { const d = devicePixelRatio || 1; ov.width = ov.clientWidth * d; ov.height = ov.clientHeight * d; octx.setTransform(d, 0, 0, d, 0, 0); }
 window.addEventListener('resize', () => running && resizeOv());
-
+function setDefaultQuad() { const W = proc.width, H = proc.height, m = 0.12; quad = [{ x: W * m, y: H * m }, { x: W * (1 - m), y: H * m }, { x: W * (1 - m), y: H * (1 - m) }, { x: W * m, y: H * (1 - m) }]; }
 ov.addEventListener('pointerdown', e => {
   if (!quad) return;
-  const r = dispRect(), px = e.offsetX, py = e.offsetY;
-  let bi = -1, bd = 45;
-  quad.forEach((p, i) => { const d = Math.hypot(r.x + p.x * r.s - px, r.y + p.y * r.s - py); if (d < bd) { bd = d; bi = i; } });
-  if (bi >= 0) { drag = bi; ov.setPointerCapture(e.pointerId); locked = true; updLock(); }
+  const r = dispRect(); let bi = -1, bd = 48;
+  quad.forEach((p, i) => { const d = Math.hypot(r.x + p.x * r.s - e.offsetX, r.y + p.y * r.s - e.offsetY); if (d < bd) { bd = d; bi = i; } });
+  if (bi >= 0) { drag = bi; ov.setPointerCapture(e.pointerId); locked = true; updChips(); }
 });
-ov.addEventListener('pointermove', e => {
-  if (drag < 0) return; const r = dispRect();
-  quad[drag] = { x: Math.min(proc.width, Math.max(0, (e.offsetX - r.x) / r.s)), y: Math.min(proc.height, Math.max(0, (e.offsetY - r.y) / r.s)) };
-});
+ov.addEventListener('pointermove', e => { if (drag < 0) return; const r = dispRect(); quad[drag] = { x: Math.min(proc.width, Math.max(0, (e.offsetX - r.x) / r.s)), y: Math.min(proc.height, Math.max(0, (e.offsetY - r.y) / r.s)) }; });
 ov.addEventListener('pointerup', () => { drag = -1; stillMs = 0; });
 
 function drawOv(ready) {
   const W = ov.clientWidth, H = ov.clientHeight; octx.clearRect(0, 0, W, H);
-  if (!quad) return;
-  const r = dispRect(), P = quad.map(p => ({ x: r.x + p.x * r.s, y: r.y + p.y * r.s }));
+  const r = dispRect();
+  if (!quad) {
+    // 안내용 흰 모서리
+    const m = 0.1, x0 = r.x + r.w * m, y0 = r.y + r.h * m, x1 = r.x + r.w * (1 - m), y1 = r.y + r.h * (1 - m);
+    brackets([{ x: x0, y: y0 }, { x: x1, y: y0 }, { x: x1, y: y1 }, { x: x0, y: y1 }], '#ffffffa0', false); return;
+  }
+  const P = quad.map(p => ({ x: r.x + p.x * r.s, y: r.y + p.y * r.s }));
   octx.beginPath(); P.forEach((p, i) => i ? octx.lineTo(p.x, p.y) : octx.moveTo(p.x, p.y)); octx.closePath();
-  const col = locked ? '#5ab0ff' : ready ? '#3ddc84' : '#ffb020';
-  octx.fillStyle = col + '22'; octx.fill(); octx.lineWidth = 3; octx.strokeStyle = col; octx.stroke();
-  // 가운데 분할선 가이드
+  const col = locked ? '#4DA3FF' : ready ? '#FF2E45' : '#FFB020';
+  octx.fillStyle = col + '14'; octx.fill(); octx.lineWidth = 1.5; octx.strokeStyle = col + '80'; octx.stroke();
   if (S.split !== 'single') {
     const rot = S.rot === 90 || S.rot === 270;
     const a = rot ? mid(P[0], P[3]) : mid(P[0], P[1]), b = rot ? mid(P[1], P[2]) : mid(P[3], P[2]);
-    octx.setLineDash([6, 6]); octx.lineWidth = 1.5; octx.beginPath(); octx.moveTo(a.x, a.y); octx.lineTo(b.x, b.y); octx.stroke(); octx.setLineDash([]);
+    octx.setLineDash([5, 7]); octx.lineWidth = 1.2; octx.strokeStyle = '#ffffff90'; octx.beginPath(); octx.moveTo(a.x, a.y); octx.lineTo(b.x, b.y); octx.stroke(); octx.setLineDash([]);
   }
-  P.forEach(p => { octx.beginPath(); octx.arc(p.x, p.y, locked ? 13 : 8, 0, 7); octx.fillStyle = col; octx.fill(); octx.lineWidth = 2; octx.strokeStyle = '#fff'; octx.stroke(); });
+  brackets(P, col, true);
+  if (locked) P.forEach(p => { octx.beginPath(); octx.arc(p.x, p.y, 9, 0, 7); octx.fillStyle = '#fff'; octx.fill(); octx.lineWidth = 3; octx.strokeStyle = col; octx.stroke(); });
+}
+function brackets(P, col, glow) {
+  octx.save(); octx.lineCap = 'round'; octx.lineJoin = 'round'; octx.lineWidth = 4.5; octx.strokeStyle = col;
+  if (glow) { octx.shadowColor = col; octx.shadowBlur = 10; }
+  for (let i = 0; i < 4; i++) {
+    const p = P[i], a = P[(i + 1) % 4], b = P[(i + 3) % 4];
+    const L = Math.min(30, Math.hypot(a.x - p.x, a.y - p.y) / 4, Math.hypot(b.x - p.x, b.y - p.y) / 4);
+    const ua = norm(a, p), ub = norm(b, p);
+    octx.beginPath(); octx.moveTo(p.x + ua.x * L, p.y + ua.y * L); octx.lineTo(p.x, p.y); octx.lineTo(p.x + ub.x * L, p.y + ub.y * L); octx.stroke();
+  }
+  octx.restore();
 }
 const mid = (a, b) => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
-
+const norm = (a, p) => { const d = Math.hypot(a.x - p.x, a.y - p.y) || 1; return { x: (a.x - p.x) / d, y: (a.y - p.y) / d }; };
 function tinyFrame() {
-  // 네모 영역(있으면)만 작게 잘라서 회색 배열로
   let sx = 0, sy = 0, sw = proc.width, sh = proc.height;
   if (quad) { const xs = quad.map(p => p.x), ys = quad.map(p => p.y); sx = Math.max(0, Math.min(...xs)); sy = Math.max(0, Math.min(...ys)); sw = Math.max(10, Math.max(...xs) - sx); sh = Math.max(10, Math.max(...ys) - sy); }
-  const th = 72; tiny.width = TW; tiny.height = th;
-  tctx.drawImage(proc, sx, sy, sw, sh, 0, 0, TW, th);
-  const d = tctx.getImageData(0, 0, TW, th).data, g = new Uint8Array(TW * th);
+  tiny.width = TW; tiny.height = TH; tctx.drawImage(proc, sx, sy, sw, sh, 0, 0, TW, TH);
+  const d = tctx.getImageData(0, 0, TW, TH).data, g = new Uint8Array(TW * TH);
   for (let i = 0; i < g.length; i++) g[i] = (d[i * 4] * 3 + d[i * 4 + 1] * 6 + d[i * 4 + 2]) / 10;
   return g;
 }
 function tinyDiff(a, b) { if (!a || !b || a.length !== b.length) return 999; let s = 0; for (let i = 0; i < a.length; i++) s += Math.abs(a[i] - b[i]); return s / a.length; }
-
-const STILL = 2.2, MOVE = 7, PAGE_DIFF = 4;
+const CIRC = 270.2;
 async function loop() {
   if (!running) return;
   const now = performance.now();
   if (!busy && now - lastTick > 110 && video.readyState >= 2) {
     const dt = lastTick ? Math.min(300, now - lastTick) : 0; lastTick = now;
     pctx.drawImage(video, 0, 0, proc.width, proc.height);
-    // 1) 네모 인식
     if (!locked && drag < 0) {
       const src = cv.matFromImageData(pctx.getImageData(0, 0, proc.width, proc.height));
-      let q = null; try { q = detectQuad(src); } catch (e) { console.warn(e); } src.delete();
+      let q = null; try { q = detectQuad(src); } catch (e) {} src.delete();
       if (q) {
         jitter = lastDet ? q.reduce((s, p, i) => s + Math.hypot(p.x - lastDet[i].x, p.y - lastDet[i].y), 0) / 4 : 99;
         lastDet = q; quadSeen = Math.min(quadSeen + 1, 10);
@@ -653,54 +1211,50 @@ async function loop() {
       } else { quadSeen = Math.max(0, quadSeen - 2); jitter = 99; if (quadSeen === 0) quad = null; }
     }
     const quadOk = locked ? !!quad : (quad && quadSeen >= 3 && jitter < 6);
-    // 2) 움직임 감지
     const tf = tinyFrame(); const motion = tinyDiff(tf, prevTiny); prevTiny = tf;
     if (motion > MOVE) { if (++moveTicks >= 2) sawMove = true; } else moveTicks = 0;
     if (motion < STILL && quadOk) stillMs += dt; else stillMs = 0;
     const cdiff = tinyDiff(tf, capTiny);
-    // 손이 지나가는 큰 움직임(책장 넘김) 후 멈추면 촬영. 손 없이 내용이 크게 바뀌어도 촬영.
     const pageChanged = firstCap || (sawMove && cdiff > 0.25) || cdiff > PAGE_DIFF;
     const prog = Math.min(1, stillMs / S.hold);
-    // 3) 상태 표시 & 자동 촬영
-    if (!quad) setStatus('책 네모 찾는 중…', 'wait');
-    else if (!autoOn) setStatus(locked ? '고정됨 · 수동 촬영' : '인식됨 · 수동 촬영', 'ok');
-    else if (motion >= STILL) setStatus(sawMove && !firstCap ? '넘기는 중…' : '흔들림 — 멈춰줘', 'wait');
-    else if (!pageChanged) setStatus('책장 넘겨줘 →', 'ok');
-    else setStatus('찍는다…', 'ok');
-    $('ringC').style.strokeDashoffset = 276.5 * (1 - (autoOn && pageChanged && quadOk ? prog : 0));
+    if (!quad) setPill('책을 화면 안에 맞춰줘', 'wait');
+    else if (!S.autoCap) setPill(locked ? '네모 고정됨 · 셔터를 눌러' : '인식됨 · 셔터를 눌러', 'ok');
+    else if (motion >= STILL) setPill(sawMove && !firstCap ? '넘기는 중…' : '흔들려요, 잠깐 멈춰줘', 'wait');
+    else if (!pageChanged) setPill('책장을 넘겨줘 →', 'ok');
+    else setPill('그대로… 찍을게', 'ok');
+    const showProg = S.autoCap && pageChanged && quadOk && prog > 0;
+    $('ringC').style.strokeDashoffset = CIRC * (1 - (showProg ? prog : 0));
+    $('ringBase').style.opacity = showProg ? .35 : .95;
     drawOv(quadOk);
-    if (autoOn && quadOk && pageChanged && stillMs >= S.hold && now - lastCap > 900) await capture(false, tf);
+    if (S.autoCap && quadOk && pageChanged && stillMs >= S.hold && now - lastCap > 900) await capture(tf);
   } else if (drag >= 0) drawOv(true);
   requestAnimationFrame(loop);
 }
-
-async function capture(manual, tf) {
+async function capture(tf) {
   if (busy || !running) return; busy = true;
   try {
     const vw = video.videoWidth, vh = video.videoHeight;
-    const c = document.createElement('canvas'); c.width = vw; c.height = vh;
-    c.getContext('2d').drawImage(video, 0, 0, vw, vh);
+    const c = document.createElement('canvas'); c.width = vw; c.height = vh; c.getContext('2d').drawImage(video, 0, 0, vw, vh);
     $('flash').style.opacity = .7; setTimeout(() => $('flash').style.opacity = 0, 120); beep();
-    setStatus('저장 중…', 'ok');
-    await sleep(30);
+    setPill('저장 중…', 'ok'); await sleep(30);
     const full = cv.imread(c); c.width = c.height = 0;
     let warped;
-    if (quad) { const k = vw / proc.width; warped = warpQuad(full, quad.map(p => ({ x: p.x * k, y: p.y * k }))); full.delete(); }
-    else warped = full;
+    if (quad) { const k = vw / proc.width; warped = warpQuad(full, quad.map(p => ({ x: p.x * k, y: p.y * k }))); full.delete(); } else warped = full;
     const ids = await savePagesFromWarp(warped);
-    sessionStack.push(ids); sessionCount += ids.length; $('cnt').textContent = sessionCount + '장';
-    const p = await getPage(ids[ids.length - 1]); $('lastThumb').style.backgroundImage = `url(${URL.createObjectURL(p.thumb)})`;
+    sessionStack.push(ids);
+    const p = await getPage(ids[ids.length - 1]);
+    $('lastThumb').style.backgroundImage = `url(${blobUrl('t' + p.id + (p.v || 0), p.thumb)})`; $('undoTag').style.display = 'block';
+    updCamHead(); updChips();
     capTiny = tf || tinyFrame(); sawMove = false; moveTicks = 0; stillMs = 0; firstCap = false; lastCap = performance.now();
   } catch (e) { console.error(e); toast('저장 실패: ' + e.message, 3000); }
   busy = false;
 }
 
-// ================= 앨범에서 불러오기 =================
+// ================= 앨범에서 추가 =================
 $('fileIn').onchange = async e => {
-  const files = [...e.target.files]; e.target.value = ''; if (!files.length) return;
-  if (!cvReady) { toast('엔진 로딩 중…'); return; }
-  sheet.locked = true;
-  sheet(`<h3>사진 불러오는 중</h3><div class="prog"><i id="impBar"></i></div><div class="sub" id="impTxt"></div>`);
+  const files = [...e.target.files]; e.target.value = ''; if (!files.length || !curBook) return;
+  sheetLocked = true; sheet(`<h3>사진 불러오는 중</h3><div class="prog"><i id="impBar"></i></div><div class="sd" id="impTxt">스캔 엔진 준비 중…</div>`);
+  try { await initCV(); } catch (err) { sheetLocked = false; $('impTxt').textContent = '스캔 엔진을 못 불러왔어'; return; }
   let n = 0;
   for (const f of files) {
     $('impTxt').textContent = `${++n} / ${files.length}`; $('impBar').style.width = (n / files.length * 100) + '%';
@@ -715,160 +1269,159 @@ $('fileIn').onchange = async e => {
       await savePagesFromWarp(w);
     } catch (err) { console.error(err); }
   }
-  sheet.locked = false; closeSheet(); renderBook(); toast('불러오기 완료');
+  sheetLocked = false; closeSheet(); toast('불러오기 완료'); refreshCur(); pnKick();
 };
 
-// ================= 뷰어 =================
-let vIdx = 0, vUrl = null;
-async function openViewer(i) { vIdx = i; show('viewer'); await renderViewer(); }
-async function renderViewer() {
-  const b = curBook; if (!b.order.length) { show('bookv'); return renderBook(); }
-  vIdx = Math.max(0, Math.min(vIdx, b.order.length - 1));
-  const p = await getPage(b.order[vIdx]);
-  if (vUrl) URL.revokeObjectURL(vUrl); vUrl = URL.createObjectURL(p.img); $('vimg').src = vUrl;
-  $('vTitle').textContent = `${vIdx + 1} / ${b.order.length}쪽${p.ocrPdf ? ' · OCR됨' : ''}`;
+// ================= 페이지 번호 자동 인식 =================
+let tessP = null, pnWorker = null, pnBusy = false, pnError = false, pnLastUi = 0;
+const needTess = () => tessP || (tessP = loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js').catch(e => { tessP = null; throw e; }));
+async function nextPending() {
+  const books = (await allBooks()).sort((a, b) => (curBook && a.id === curBook.id ? -1 : curBook && b.id === curBook.id ? 1 : b.updated - a.updated));
+  for (const b of books) {
+    const m = Object.fromEntries((await bookPages(b.id)).map(p => [p.id, p]));
+    for (const id of b.order) if (m[id] && m[id].pn === undefined) return m[id];
+  }
+  return null;
 }
-$('btnVBack').onclick = () => { show('bookv'); renderBook(); };
-async function movePage(d) {
-  const o = curBook.order, j = vIdx + d; if (j < 0 || j >= o.length) return;
-  [o[vIdx], o[j]] = [o[j], o[vIdx]]; vIdx = j; await putBook(curBook); renderViewer();
+async function pnKick() {
+  if (pnBusy || !S.pnAuto || running || ocrRunning || !db) return;
+  pnBusy = true;
+  try {
+    let p = await nextPending();
+    if (p) {
+      try {
+        await needTess();
+        if (!pnWorker) { pnWorker = await Tesseract.createWorker('eng', 1); await pnWorker.setParameters({ tessedit_pageseg_mode: '11' }); }
+        pnError = false;
+      } catch (e) { pnError = true; if (curScreen === 'sort') renderBanner(); return; }
+    }
+    while (p && !running && !ocrRunning && S.pnAuto) {
+      try { p.pn = await detectPn(p); } catch (e) { console.warn(e); p.pn = { v: null, conf: 0, src: 'auto' }; }
+      const fresh = await getPage(p.id);
+      if (fresh && fresh.pn === undefined) { fresh.pn = p.pn; await putPage(fresh); }
+      if (curBook && p.bookId === curBook.id) pnUi();
+      p = await nextPending();
+    }
+    if (!p) pnUi(true);
+  } finally { pnBusy = false; }
 }
-$('btnVPrev').onclick = () => movePage(-1);
-$('btnVNext').onclick = () => movePage(1);
-$('btnVDel').onclick = async () => {
-  if (!confirm(`${vIdx + 1}쪽 지울까?`)) return;
-  const id = curBook.order[vIdx]; await delPage(id); curBook.order.splice(vIdx, 1);
-  if (curBook.insertAt != null && curBook.insertAt > vIdx) curBook.insertAt--;
-  await putBook(curBook); renderViewer();
-};
-$('btnVIns').onclick = async () => { curBook.insertAt = vIdx + 1; await putBook(curBook); toast(`${vIdx + 1}쪽 뒤에 이어찍기 설정`); show('bookv'); renderBook(); };
-$('btnVRot').onclick = async () => {
-  const p = await getPage(curBook.order[vIdx]);
-  const bmp = await createImageBitmap(p.img); const c = document.createElement('canvas'); c.width = bmp.height; c.height = bmp.width;
-  const x = c.getContext('2d'); x.translate(c.width, 0); x.rotate(Math.PI / 2); x.drawImage(bmp, 0, 0);
-  p.img = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.88)); p.thumb = await thumbOf(c); p.w = c.width; p.h = c.height; p.ocrPdf = null; p.text = null;
-  await putPage(p); renderViewer();
-};
-// 스와이프로 넘기기
-let sx0 = null;
-$('vimg').addEventListener('touchstart', e => sx0 = e.touches[0].clientX, { passive: true });
-$('vimg').addEventListener('touchend', e => { if (sx0 == null) return; const dx = e.changedTouches[0].clientX - sx0; sx0 = null; if (Math.abs(dx) > 60) { vIdx += dx < 0 ? 1 : -1; renderViewer(); } });
+async function pnUi(force) {
+  const now = Date.now(); if (!force && now - pnLastUi < 700) return; pnLastUi = now;
+  if (curScreen === 'sort') { await computeInfer(); renderBanner(); updateLabels(); }
+  else if (curScreen === 'review') renderReview();
+}
+async function detectPn(p) {
+  const bmp = await createImageBitmap(p.img);
+  const W = bmp.width, H = bmp.height; let best = null;
+  for (const [pos, y0, h] of [['bottom', H * 0.885, H * 0.115], ['top', 0, H * 0.085]]) {
+    const sc = Math.min(1, 1400 / W);
+    const c = document.createElement('canvas'); c.width = Math.round(W * sc); c.height = Math.max(8, Math.round(h * sc));
+    const x = c.getContext('2d'); x.filter = 'grayscale(1) contrast(1.3)'; x.drawImage(bmp, 0, y0, W, h, 0, 0, c.width, c.height);
+    const r = await pnWorker.recognize(c);
+    const cand = pickPageNumber(r.data.words, c.width, pos);
+    c.width = 0;
+    if (cand && (!best || cand.score > best.score)) best = cand;
+    if (best && best.conf >= 85 && pos === 'bottom') break;
+  }
+  bmp.close && bmp.close();
+  if (!best || best.conf < 55) return { v: null, conf: best ? Math.round(best.conf) : 0, src: 'auto' };
+  return { v: best.v, conf: Math.round(best.conf), src: 'auto' };
+}
 
-// ================= PDF 내보내기 =================
+// ================= PDF =================
 let pdfLibP = null;
-const needPdfLib = () => pdfLibP || (pdfLibP = loadScript('https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js'));
-$('btnPdf').onclick = async () => {
-  const b = curBook; if (!b.order.length) return toast('페이지가 없어');
-  sheet.locked = true;
-  sheet(`<h3>PDF 만드는 중</h3><div class="prog"><i id="pBar"></i></div><div class="sub" id="pTxt">준비 중…</div><div id="pOut"></div>`);
+const needPdfLib = () => pdfLibP || (pdfLibP = loadScript('https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js').catch(e => { pdfLibP = null; throw e; }));
+async function exportPdf() {
+  const b = curBook; const pages = await pagesInOrder(b);
+  if (!pages.length) return toast('페이지가 없어');
+  sheetLocked = true;
+  sheet(`<h3>PDF 만드는 중</h3><div class="prog"><i id="pBar"></i></div><div class="sd" id="pTxt">준비 중…</div><div id="pOut"></div>`);
   try {
     await needPdfLib();
     const { PDFDocument } = PDFLib;
     const doc = await PDFDocument.create(); doc.setTitle(b.title); doc.setCreator('북스캔');
     let i = 0, ocrN = 0;
-    for (const id of b.order) {
-      const p = await getPage(id); i++;
-      $('pTxt').textContent = `${i} / ${b.order.length}쪽`; $('pBar').style.width = (i / b.order.length * 100) + '%';
-      if (p.ocrPdf) {
-        const src = await PDFDocument.load(await p.ocrPdf.arrayBuffer());
-        const [cp] = await doc.copyPages(src, [0]); doc.addPage(cp); ocrN++;
-      } else {
-        const img = await doc.embedJpg(await p.img.arrayBuffer());
-        const pg = doc.addPage([img.width * 72 / DPI, img.height * 72 / DPI]);
-        pg.drawImage(img, { x: 0, y: 0, width: pg.getWidth(), height: pg.getHeight() });
-      }
+    for (const p of pages) {
+      i++; $('pTxt').textContent = `${i} / ${pages.length}쪽`; $('pBar').style.width = (i / pages.length * 100) + '%';
+      if (p.ocrPdf) { const src = await PDFDocument.load(await p.ocrPdf.arrayBuffer()); const [cp] = await doc.copyPages(src, [0]); doc.addPage(cp); ocrN++; }
+      else { const img = await doc.embedJpg(await p.img.arrayBuffer()); const pg = doc.addPage([img.width * 72 / DPI, img.height * 72 / DPI]); pg.drawImage(img, { x: 0, y: 0, width: pg.getWidth(), height: pg.getHeight() }); }
       if (i % 10 === 0) await sleep(0);
     }
     $('pTxt').textContent = '파일로 묶는 중…';
     const bytes = await doc.save();
     const name = b.title.replace(/[\\/:*?"<>|]/g, '_') + '.pdf';
     const file = new File([bytes], name, { type: 'application/pdf' });
-    const mb = (bytes.length / 1048576).toFixed(1);
-    sheet.locked = false;
-    $('pTxt').innerHTML = `완료! ${b.order.length}쪽 · ${mb}MB · 검색가능 ${ocrN}쪽<br>아래 버튼 → "파일에 저장" 또는 "Books"/"PDF 뷰어"로 보내서 아이패드에서 열어.`;
-    $('pOut').innerHTML = `<div class="bar" style="padding:12px 0 0;flex-direction:column"><button class="acc" id="pShare">공유 / 파일에 저장</button><button id="pDl">다운로드</button><button class="ghost" id="pClose">닫기</button></div>`;
-    $('pShare').onclick = async () => {
-      try { if (navigator.canShare && navigator.canShare({ files: [file] })) await navigator.share({ files: [file], title: b.title }); else $('pDl').click(); }
-      catch (e) { if (e.name !== 'AbortError') toast('공유 실패, 다운로드로 해봐'); }
-    };
+    sheetLocked = false;
+    $('pTxt').innerHTML = `<b style="color:var(--tx);font-size:16px">완료!</b> ${pages.length}쪽 · ${(bytes.length / 1048576).toFixed(1)}MB · 검색 가능 ${ocrN}쪽<br>"파일에 저장"으로 iCloud Drive에 넣거나 AirDrop으로 아이패드에 보내.`;
+    $('pOut').innerHTML = `<div style="display:flex;flex-direction:column;gap:10px;margin-top:8px"><button class="btnRed" style="height:54px;font-size:17px" id="pShare">${icon('i-share')}공유 / 파일에 저장</button><button class="btnGray" id="pDl">다운로드</button><button class="btnGray" id="pClose">닫기</button></div>`;
+    $('pShare').onclick = async () => { try { if (navigator.canShare && navigator.canShare({ files: [file] })) await navigator.share({ files: [file], title: b.title }); else $('pDl').click(); } catch (e) { if (e.name !== 'AbortError') toast('공유 실패, 다운로드로 해봐'); } };
     $('pDl').onclick = () => { const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 60000); };
     $('pClose').onclick = closeSheet;
-  } catch (e) { console.error(e); sheet.locked = false; $('pTxt').textContent = '실패: ' + e.message; }
-};
-
-async function exportTxt() {
-  let out = '', n = 0;
-  for (let i = 0; i < curBook.order.length; i++) { const p = await getPage(curBook.order[i]); if (p.text) { out += `\n\n===== ${i + 1}쪽 =====\n` + p.text; n++; } }
-  if (!n) return toast('OCR된 쪽이 없어. 먼저 OCR 돌려줘');
-  const file = new File([out.trim()], curBook.title + '.txt', { type: 'text/plain' });
-  try { await navigator.share({ files: [file] }); } catch (e) { const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = file.name; a.click(); }
+  } catch (e) { sheetLocked = false; $('pTxt').textContent = '실패: ' + e.message; }
 }
+async function exportTxt() {
+  const pages = await pagesInOrder(curBook); let out = '', n = 0;
+  await computeInferFor(pages);
+  pages.forEach((p, i) => { if (p.text) { const l = txtInfer.items[i].label; out += `\n\n===== ${l != null ? l + '페이지' : (i + 1) + '번째'} =====\n` + p.text; n++; } });
+  if (!n) return toast('글자 OCR된 쪽이 없어. 먼저 OCR 돌려줘');
+  const file = new File([out.trim()], curBook.title + '.txt', { type: 'text/plain' });
+  try { await navigator.share({ files: [file] }); } catch (e) { if (e.name !== 'AbortError') { const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = file.name; a.click(); } }
+}
+let txtInfer = null; async function computeInferFor(pages) { txtInfer = inferPages(pages.map(p => p.pn)); }
 
-// ================= OCR (폰 안에서) =================
-let ocrRunning = false, ocrStop = false, tessP = null;
-const needTess = () => tessP || (tessP = loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js'));
-$('btnOcr').onclick = () => {
-  const todo = curBook.order.length;
-  if (!todo) return toast('페이지가 없어');
-  sheet(`<h3>OCR (글자 인식)</h3>
-    <div class="sub" style="line-height:1.6">한글+영어를 인식해서 PDF에 <b>검색·복사 가능한 글자</b>를 입혀. 폰에서 돌리면 한 쪽에 10~30초쯤 걸려. 중간에 멈춰도 다음에 이어서 해. 화면은 켜둔 채로 둬.<br>처음 한 번은 한글 데이터(약 10MB) 받느라 좀 걸려.</div>
-    <div class="prog"><i id="oBar"></i></div><div class="sub" id="oTxt"></div>
-    <div class="bar" style="padding:12px 0 0"><button class="ghost" id="oClose">닫기</button><button class="acc" id="oGo">시작</button></div>`, () => {
-    $('oClose').onclick = () => { if (ocrRunning) { ocrStop = true; $('oTxt').textContent = '이번 쪽 끝나면 멈출게…'; } else closeSheet(); };
+// ================= 검색용 글자 OCR =================
+let ocrRunning = false, ocrStop = false;
+function ocrSheet() {
+  sheet(`<h3>검색용 글자 OCR</h3><div class="sd">한글+영어를 인식해서 PDF에 <b>검색·복사 가능한 글자</b>를 입혀. 한 쪽에 10~30초쯤 걸려. 멈춰도 다음에 이어서 하고, 화면은 켜둔 채로 둬. 처음엔 한글 데이터(약 10MB)를 받아.<br>PC가 있으면 bookscan_ocr.py가 훨씬 빨라.</div>
+    <div class="prog"><i id="oBar"></i></div><div class="sd" id="oTxt"></div>
+    <div class="two"><button class="btnGray" id="oClose">닫기</button><button class="btnRed" style="height:52px;font-size:17px" id="oGo">시작</button></div>`, async () => {
+    $('oClose').onclick = () => { if (ocrRunning) { ocrStop = true; $('oTxt').textContent = '지금 쪽 끝나면 멈출게…'; } else closeSheet(); };
     $('oGo').onclick = runOcr;
-    refreshOcrInfo();
+    const pages = await pagesInOrder(curBook); const done = pages.filter(p => p.ocrPdf).length;
+    $('oTxt').textContent = `완료 ${done} / ${pages.length}쪽`; $('oBar').style.width = (pages.length ? done / pages.length * 100 : 0) + '%';
+    if (done === pages.length) { $('oGo').disabled = true; $('oGo').textContent = '전부 완료'; }
   });
-};
-async function refreshOcrInfo() {
-  let done = 0; for (const id of curBook.order) { const p = await getPage(id); if (p.ocrPdf) done++; }
-  $('oTxt').textContent = `완료 ${done} / ${curBook.order.length}쪽`; $('oBar').style.width = (done / curBook.order.length * 100) + '%';
-  if (done === curBook.order.length) { $('oGo').disabled = true; $('oGo').textContent = '전부 완료'; }
 }
 async function runOcr() {
-  if (ocrRunning) return; ocrRunning = true; ocrStop = false; sheet.locked = true;
+  if (ocrRunning) return; ocrRunning = true; ocrStop = false; sheetLocked = true;
   $('oGo').disabled = true; $('oClose').textContent = '멈추기'; getWake();
   let worker;
   try {
     $('oTxt').textContent = 'OCR 엔진 불러오는 중…';
     await needTess();
-    worker = await Tesseract.createWorker('kor+eng', 1, {
-      logger: m => { if (m.status && m.status.includes('loading')) $('oTxt').textContent = `엔진 준비 중… ${Math.round((m.progress || 0) * 100)}%`; }
-    });
+    worker = await Tesseract.createWorker('kor+eng', 1, { logger: m => { if (m.status && m.status.includes('loading')) $('oTxt').textContent = `엔진 준비 중… ${Math.round((m.progress || 0) * 100)}%`; } });
     await worker.setParameters({ user_defined_dpi: String(DPI), preserve_interword_spaces: '1' });
     const order = [...curBook.order]; let done = 0;
     for (let i = 0; i < order.length; i++) {
       const p = await getPage(order[i]); if (!p) continue;
       if (p.ocrPdf) { done++; continue; }
       if (ocrStop) break;
-      $('oTxt').textContent = `${i + 1}쪽 인식 중… (완료 ${done}/${order.length})`;
+      $('oTxt').textContent = `${i + 1}번째 장 인식 중… (완료 ${done}/${order.length})`;
       const t0 = Date.now();
       const r = await worker.recognize(p.img, { pdfTitle: curBook.title }, { pdf: true, text: true });
       p.ocrPdf = new Blob([new Uint8Array(r.data.pdf)], { type: 'application/pdf' }); p.text = r.data.text;
+      if (p.pn === undefined) { const m = (r.data.text || '').match(/(?:^|\n)\s*-?\s*(\d{1,4})\s*-?\s*$/); if (m) p.pn = { v: +m[1], conf: 60, src: 'auto' }; }
       await putPage(p); done++;
       $('oBar').style.width = (done / order.length * 100) + '%';
-      $('oTxt').textContent = `${i + 1}쪽 완료 (${((Date.now() - t0) / 1000).toFixed(0)}초) · ${done}/${order.length}`;
+      $('oTxt').textContent = `${i + 1}번째 장 완료 (${((Date.now() - t0) / 1000).toFixed(0)}초) · ${done}/${order.length}`;
     }
-    $('oTxt').textContent = ocrStop ? `멈춤 · ${done}/${order.length}쪽 완료 (다음에 이어서 돼)` : `전부 완료! 이제 📄 PDF 누르면 검색 가능한 PDF로 나와.`;
-  } catch (e) { console.error(e); $('oTxt').textContent = 'OCR 실패: ' + e.message; }
+    $('oTxt').textContent = ocrStop ? `멈춤 · ${done}/${order.length}쪽 완료 (다음에 이어서 돼)` : '전부 완료! PDF 만들면 검색 가능한 PDF로 나와.';
+  } catch (e) { $('oTxt').textContent = 'OCR 실패: ' + e.message; }
   try { worker && await worker.terminate(); } catch (e) {}
-  ocrRunning = false; sheet.locked = false; dropWake();
-  $('oClose').textContent = '닫기'; $('oClose').onclick = () => { closeSheet(); renderBook(); };
+  ocrRunning = false; sheetLocked = false; dropWake();
+  $('oClose').textContent = '닫기'; $('oClose').onclick = () => { closeSheet(); refreshCur(); };
+  pnKick();
 }
 
 // ================= 시작 =================
-(function makeIcon() {
-  const c = document.createElement('canvas'); c.width = c.height = 180; const x = c.getContext('2d');
-  x.fillStyle = '#0e0f11'; x.fillRect(0, 0, 180, 180);
-  x.fillStyle = '#3ddc84'; x.beginPath(); x.moveTo(30, 50); x.lineTo(88, 40); x.lineTo(88, 140); x.lineTo(30, 150); x.fill();
-  x.fillStyle = '#2bb56a'; x.beginPath(); x.moveTo(150, 50); x.lineTo(92, 40); x.lineTo(92, 140); x.lineTo(150, 150); x.fill();
-  $('touchIcon').href = c.toDataURL('image/png');
-})();
 (async () => {
-  try { await openDB(); } catch (e) { $('loadMsg').textContent = '저장소 열기 실패: ' + e.message; return; }
+  try { await openDB(); } catch (e) { document.querySelector('#loading').innerHTML = '<div style="padding:30px;text-align:center">저장소를 못 열었어: ' + esc(e.message) + '</div>'; return; }
   try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch (e) {}
-  renderLib();
+  const lb = lastBookId(); if (lb) curBook = (await getBook(lb)) || null;
+  await renderHome();
   $('loading').classList.add('off');
-  try { await initCV(); } catch (e) { toast('스캔 엔진 로드 실패. 인터넷 확인 후 새로고침', 4000); }
+  initCV().catch(() => {});
+  setTimeout(pnKick, 1500);
 })();
 </script>
 </body>
