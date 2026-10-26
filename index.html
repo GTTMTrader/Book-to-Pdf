@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="북스캔">
+<meta name="theme-color" content="#0e0f11">
+<title>북스캔</title>
+<link rel="apple-touch-icon" id="touchIcon">
+<style>
+:root{--bg:#0e0f11;--card:#17191c;--line:#2a2d32;--tx:#eceef0;--sub:#8b9096;--acc:#3ddc84;--warn:#ffb020;--bad:#ff5a5a;--r:14px}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",system-ui,sans-serif;-webkit-user-select:none;user-select:none}
+button{font:inherit;color:inherit;border:0;background:var(--card);border-radius:12px;padding:12px 14px;cursor:pointer}
+button:active{opacity:.7}
+button.acc{background:var(--acc);color:#04210f;font-weight:700}
+button.ghost{background:transparent;border:1px solid var(--line)}
+button.bad{background:#3a1717;color:#ff8a8a}
+button:disabled{opacity:.35}
+.screen{position:fixed;inset:0;display:none;flex-direction:column;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+.screen.on{display:flex}
+header{display:flex;align-items:center;gap:10px;padding:14px 16px 8px}
+header h1{font-size:22px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+header button{padding:8px 12px}
+.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:8px 16px 24px}
+.sub{color:var(--sub);font-size:13px}
+.book{display:flex;gap:12px;align-items:center;background:var(--card);border-radius:var(--r);padding:12px;margin-bottom:10px}
+.book .cov{width:48px;height:64px;border-radius:6px;background:#222 center/cover;flex:none}
+.book .t{font-weight:600;font-size:16px}
+.empty{text-align:center;color:var(--sub);padding:60px 20px;line-height:1.6}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px}
+.pg{position:relative;background:#222;border-radius:8px;overflow:hidden;aspect-ratio:3/4}
+.pg img{width:100%;height:100%;object-fit:cover;display:block}
+.pg .n{position:absolute;left:4px;bottom:4px;background:#000a;font-size:11px;padding:2px 6px;border-radius:6px}
+.pg .o{position:absolute;right:4px;top:4px;background:var(--acc);color:#04210f;font-size:10px;font-weight:700;padding:1px 5px;border-radius:5px}
+.pg.ins::after{content:"";position:absolute;right:0;top:0;bottom:0;width:4px;background:var(--warn)}
+.bar{display:flex;gap:8px;padding:10px 16px;flex-wrap:wrap}
+.bar button{flex:1;min-width:30%}
+.banner{margin:0 16px 8px;background:#3a2c0b;color:#ffd27a;border-radius:10px;padding:10px 12px;font-size:13px;display:flex;align-items:center;gap:8px}
+.banner button{padding:6px 10px;font-size:12px;background:#0003}
+/* 스캔 */
+#scan{background:#000;padding:0}
+#vwrap{position:absolute;inset:0}
+#video,#ov{position:absolute;inset:0;width:100%;height:100%}
+#video{object-fit:contain}
+#ov{touch-action:none}
+#flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .25s}
+.stop{position:absolute;left:0;right:0;top:0;padding:calc(env(safe-area-inset-top) + 8px) 12px 8px;display:flex;gap:8px;align-items:center;background:linear-gradient(#000c,#0000)}
+.pill{background:#000a;border-radius:20px;padding:7px 12px;font-size:13px;font-weight:600;backdrop-filter:blur(6px)}
+.pill.ok{color:var(--acc)} .pill.wait{color:var(--warn)}
+.stop .sp{flex:1}
+.stop button{background:#000a;padding:8px 12px;font-size:14px}
+.sbot{position:absolute;left:0;right:0;bottom:0;padding:14px 18px calc(env(safe-area-inset-bottom) + 14px);display:flex;align-items:center;justify-content:space-between;background:linear-gradient(#0000,#000c)}
+.sbot .side{width:84px;display:flex;flex-direction:column;align-items:center;gap:6px}
+.tog{background:#000a;font-size:13px;padding:9px 0;width:84px;font-weight:600}
+.tog.on{background:var(--acc);color:#04210f}
+#shutter{width:76px;height:76px;border-radius:50%;background:#fff;border:5px solid #ffffff55;background-clip:padding-box;position:relative;padding:0}
+#ring{position:absolute;inset:-9px;pointer-events:none}
+#lastThumb{width:52px;height:68px;border-radius:6px;background:#222 center/cover;border:2px solid #fff6;padding:0}
+#cnt{font-size:12px;color:#ddd}
+#insTag{position:absolute;left:12px;top:calc(env(safe-area-inset-top) + 56px);background:#3a2c0bdd;color:#ffd27a;font-size:12px;padding:5px 10px;border-radius:8px;display:none}
+/* 시트 */
+.sheetBg{position:fixed;inset:0;background:#0008;display:none;z-index:50}
+.sheetBg.on{display:block}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:#1b1d21;border-radius:18px 18px 0 0;padding:18px 16px calc(env(safe-area-inset-bottom) + 18px);max-height:85vh;overflow-y:auto}
+.sheet h3{margin:0 0 12px;font-size:17px}
+.opt{margin-bottom:14px}
+.opt .l{font-size:13px;color:var(--sub);margin-bottom:6px}
+.seg{display:flex;background:#0e0f11;border-radius:10px;padding:3px;gap:3px}
+.seg button{flex:1;padding:9px 4px;font-size:13px;background:transparent;border-radius:8px}
+.seg button.on{background:#2d3138;font-weight:700;color:var(--acc)}
+input[type=text]{width:100%;font:inherit;font-size:16px;padding:12px;border-radius:10px;border:1px solid var(--line);background:#0e0f11;color:var(--tx);-webkit-user-select:text;user-select:text}
+.prog{height:8px;background:#0e0f11;border-radius:4px;overflow:hidden;margin:12px 0 6px}
+.prog i{display:block;height:100%;width:0;background:var(--acc);transition:width .2s}
+/* 뷰어 */
+#viewer{background:#000}
+#vimg{flex:1;min-height:0;object-fit:contain;width:100%}
+#toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 110px);transform:translateX(-50%);background:#000d;color:#fff;padding:10px 16px;border-radius:20px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:99;white-space:nowrap}
+#loading{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;z-index:100}
+#loading.off{display:none}
+.spin{width:30px;height:30px;border:3px solid var(--line);border-top-color:var(--acc);border-radius:50%;animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<div id="loading"><div class="spin"></div><div class="sub" id="loadMsg">스캔 엔진 불러오는 중… (처음 한 번만 오래 걸려)</div></div>
+
+<!-- 책장 -->
+<section class="screen on" id="lib">
+  <header><h1>📚 북스캔</h1><button id="btnImportAll" class="ghost">⚙︎</button></header>
+  <div class="scroll" id="bookList"></div>
+  <div class="bar"><button class="acc" id="btnNewBook">＋ 새 책</button></div>
+</section>
+
+<!-- 책 상세 -->
+<section class="screen" id="bookv">
+  <header><button class="ghost" id="btnBack">‹</button><h1 id="bookTitle"></h1><button class="ghost" id="btnBookMenu">⋯</button></header>
+  <div class="sub" style="padding:0 16px 8px" id="bookInfo"></div>
+  <div id="insBanner"></div>
+  <div class="scroll"><div class="grid" id="pageGrid"></div></div>
+  <div class="bar">
+    <button class="acc" id="btnScan">📷 스캔</button>
+    <button id="btnOcr">🔤 OCR</button>
+    <button id="btnPdf">📄 PDF</button>
+  </div>
+</section>
+
+<!-- 스캔 -->
+<section class="screen" id="scan">
+  <div id="vwrap"><video id="video" playsinline muted autoplay></video><canvas id="ov"></canvas><div id="flash"></div></div>
+  <div class="stop">
+    <button id="btnScanClose">✕</button>
+    <span class="pill" id="status">카메라 준비 중</span>
+    <span class="sp"></span>
+    <button id="btnScanSet">⚙︎</button>
+  </div>
+  <div id="insTag"></div>
+  <div class="sbot">
+    <div class="side"><button id="lastThumb"></button><span id="cnt">0장</span></div>
+    <button id="shutter"><svg id="ring" viewBox="0 0 94 94"><circle cx="47" cy="47" r="44" fill="none" stroke="#3ddc84" stroke-width="5" stroke-dasharray="276.5" stroke-dashoffset="276.5" transform="rotate(-90 47 47)" id="ringC"/></svg></button>
+    <div class="side"><button class="tog on" id="btnAuto">자동</button><button class="tog" id="btnLock">🔓 고정</button></div>
+  </div>
+</section>
+
+<!-- 페이지 뷰어 -->
+<section class="screen" id="viewer">
+  <header><button class="ghost" id="btnVBack">‹</button><h1 id="vTitle" style="font-size:17px"></h1></header>
+  <img id="vimg" alt="">
+  <div class="bar">
+    <button id="btnVPrev">◀ 앞으로</button><button id="btnVNext">뒤로 ▶</button><button id="btnVRot">↻ 회전</button>
+    <button id="btnVIns">⤵︎ 이 뒤에 이어찍기</button><button class="bad" id="btnVDel">삭제</button>
+  </div>
+</section>
+
+<div class="sheetBg" id="sheetBg"><div class="sheet" id="sheet"></div></div>
+<div id="toast"></div>
+<input type="file" id="fileIn" accept="image/*" multiple hidden>
+
+<script>
+// ===== 비전 코어 (OpenCV.js) =====
+function orderQuad(pts) {
+  // pts: [{x,y}x4] -> [TL, TR, BR, BL]
+  const s = pts.map(p => p.x + p.y), d = pts.map(p => p.y - p.x);
+  const tl = pts[s.indexOf(Math.min(...s))], br = pts[s.indexOf(Math.max(...s))];
+  const tr = pts[d.indexOf(Math.min(...d))], bl = pts[d.indexOf(Math.max(...d))];
+  const set = new Set([tl, tr, br, bl]);
+  if (set.size < 4) {
+    // 각도 기준 정렬 fallback
+    const cx = pts.reduce((a, p) => a + p.x, 0) / 4, cy = pts.reduce((a, p) => a + p.y, 0) / 4;
+    const srt = [...pts].sort((a, b) => Math.atan2(a.y - cy, a.x - cx) - Math.atan2(b.y - cy, b.x - cx));
+    // atan2 정렬: 왼쪽위(-135°)부터 시계방향
+    let i0 = 0, best = 1e9;
+    srt.forEach((p, i) => { if (p.x + p.y < best) { best = p.x + p.y; i0 = i; } });
+    return [0, 1, 2, 3].map(k => srt[(i0 + k) % 4]);
+  }
+  return [tl, tr, br, bl];
+}
+
+function quadArea(q) {
+  let a = 0;
+  for (let i = 0; i < 4; i++) { const p = q[i], n = q[(i + 1) % 4]; a += p.x * n.y - n.x * p.y; }
+  return Math.abs(a) / 2;
+}
+
+function matToPts(m) {
+  const pts = [];
+  for (let i = 0; i < m.rows; i++) pts.push({ x: m.data32S[i * 2], y: m.data32S[i * 2 + 1] });
+  return pts;
+}
+
+// rgba Mat(작은 해상도) -> 책 외곽 사각형 or null
+function detectQuad(src) {
+  const W = src.cols, H = src.rows, frameA = W * H;
+  const gray = new cv.Mat(), blur = new cv.Mat(), edges = new cv.Mat();
+  const contours = new cv.MatVector(), hier = new cv.Mat();
+  let best = null, bestA = 0;
+  try {
+    cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+    cv.GaussianBlur(gray, blur, new cv.Size(5, 5), 0);
+    // 중앙값 기반 자동 Canny 임계값
+    const med = medianOf(blur);
+    const lo = Math.max(10, 0.66 * med * 0.5), hi = Math.min(255, Math.max(40, 1.33 * med * 0.5));
+    cv.Canny(blur, edges, lo, hi);
+    const k = cv.getStructuringElement(cv.MORPH_RECT, new cv.Size(5, 5));
+    cv.morphologyEx(edges, edges, cv.MORPH_CLOSE, k);
+    k.delete();
+    cv.findContours(edges, contours, hier, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
+    for (let i = 0; i < contours.size(); i++) {
+      const c = contours.get(i);
+      const a = cv.contourArea(c);
+      if (a < frameA * 0.12) { c.delete(); continue; }
+      const hull = new cv.Mat();
+      cv.convexHull(c, hull, false, true);
+      const peri = cv.arcLength(hull, true);
+      for (const eps of [0.02, 0.03, 0.045, 0.06, 0.08]) {
+        const ap = new cv.Mat();
+        cv.approxPolyDP(hull, ap, eps * peri, true);
+        if (ap.rows === 4) {
+          const q = orderQuad(matToPts(ap));
+          const qa = quadArea(q);
+          if (qa > bestA && qa < frameA * 0.98) { bestA = qa; best = q; }
+          ap.delete(); break;
+        }
+        ap.delete();
+      }
+      hull.delete(); c.delete();
+    }
+  } finally {
+    gray.delete(); blur.delete(); edges.delete(); contours.delete(); hier.delete();
+  }
+  return best;
+}
+
+function medianOf(gray) {
+  const h = new Array(256).fill(0), d = gray.data;
+  for (let i = 0; i < d.length; i += 7) h[d[i]]++;
+  const tot = h.reduce((a, b) => a + b, 0); let acc = 0;
+  for (let i = 0; i < 256; i++) { acc += h[i]; if (acc >= tot / 2) return i; }
+  return 128;
+}
+
+const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+
+// 원근 보정: src(풀해상도 rgba) + quad(같은 좌표계) -> 펴진 Mat
+function warpQuad(src, q) {
+  const w = Math.round(Math.max(dist(q[0], q[1]), dist(q[3], q[2])));
+  const h = Math.round(Math.max(dist(q[0], q[3]), dist(q[1], q[2])));
+  const s = cv.matFromArray(4, 1, cv.CV_32FC2, [q[0].x, q[0].y, q[1].x, q[1].y, q[2].x, q[2].y, q[3].x, q[3].y]);
+  const d = cv.matFromArray(4, 1, cv.CV_32FC2, [0, 0, w - 1, 0, w - 1, h - 1, 0, h - 1]);
+  const M = cv.getPerspectiveTransform(s, d);
+  const out = new cv.Mat();
+  cv.warpPerspective(src, out, M, new cv.Size(w, h), cv.INTER_CUBIC, cv.BORDER_REPLICATE);
+  s.delete(); d.delete(); M.delete();
+  return out;
+}
+
+function rotateMat(m, deg) {
+  if (!deg) return m;
+  const out = new cv.Mat();
+  const code = deg === 90 ? cv.ROTATE_90_CLOCKWISE : deg === 180 ? cv.ROTATE_180 : cv.ROTATE_90_COUNTERCLOCKWISE;
+  cv.rotate(m, out, code);
+  m.delete();
+  return out;
+}
+
+// 가운데 접힘선(제본선) x좌표 찾기: 글자 없는 세로 띠(분산 낮음) 중 가장 어두운 곳
+function findGutter(m) {
+  const sw = 400, sh = Math.max(20, Math.round(m.rows * sw / m.cols));
+  const small = new cv.Mat(), g = new cv.Mat();
+  cv.resize(m, small, new cv.Size(sw, sh), 0, 0, cv.INTER_AREA);
+  cv.cvtColor(small, g, cv.COLOR_RGBA2GRAY);
+  const mean = new Float64Array(sw), sd = new Float64Array(sw);
+  const y0 = Math.round(sh * 0.08), y1 = Math.round(sh * 0.92), n = y1 - y0;
+  for (let x = 0; x < sw; x++) {
+    let s = 0, s2 = 0;
+    for (let y = y0; y < y1; y++) { const v = g.data[y * sw + x]; s += v; s2 += v * v; }
+    mean[x] = s / n; sd[x] = Math.sqrt(Math.max(0, s2 / n - mean[x] * mean[x]));
+  }
+  small.delete(); g.delete();
+  const smooth = (arr, r) => { const o = new Float64Array(sw); for (let x = 0; x < sw; x++) { let s = 0, c = 0; for (let k = -r; k <= r; k++) { const j = x + k; if (j >= 0 && j < sw) { s += arr[j]; c++; } } o[x] = s / c; } return o; };
+  const ms = smooth(mean, 2), ss = smooth(sd, 3);
+  const a = Math.round(sw * 0.38), b = Math.round(sw * 0.62);
+  const win = [...ss.slice(a, b + 1)];
+  const mn = Math.min(...win), med = [...win].sort((p, q) => p - q)[Math.floor(win.length / 2)];
+  const thr = mn + 0.35 * (med - mn) + 1;
+  // 분산 낮은 구간(run)들
+  const runs = []; let st = -1;
+  for (let x = a; x <= b + 1; x++) {
+    const low = x <= b && ss[x] <= thr;
+    if (low && st < 0) st = x;
+    if (!low && st >= 0) { runs.push([st, x - 1]); st = -1; }
+  }
+  let bestX = sw / 2;
+  if (runs.length) {
+    // 가장 넓은 빈 띠 선택 (동률이면 가운데에 가까운 것)
+    runs.sort((p, q) => (q[1] - q[0]) - (p[1] - p[0]) || Math.abs((p[0] + p[1]) / 2 - sw / 2) - Math.abs((q[0] + q[1]) / 2 - sw / 2));
+    const [r0, r1] = runs[0];
+    let dx = r0, dv = 1e9, sum = 0;
+    for (let x = r0; x <= r1; x++) { sum += ms[x]; if (ms[x] < dv) { dv = ms[x]; dx = x; } }
+    const avg = sum / (r1 - r0 + 1);
+    bestX = (avg - dv > 3) ? dx : (r0 + r1) / 2;
+  }
+  return Math.round(bestX * m.cols / sw);
+}
+
+function enhance(m, mode) {
+  if (mode === 'color') return m;
+  const g = new cv.Mat();
+  cv.cvtColor(m, g, cv.COLOR_RGBA2GRAY);
+  if (mode === 'gray') {
+    cv.normalize(g, g, 0, 255, cv.NORM_MINMAX);
+  } else if (mode === 'bw') {
+    const bs = Math.max(15, (Math.round(g.cols / 40) | 1));
+    cv.adaptiveThreshold(g, g, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, bs, 15);
+  }
+  const out = new cv.Mat();
+  cv.cvtColor(g, out, cv.COLOR_GRAY2RGBA);
+  g.delete(); m.delete();
+  return out;
+}
+
+// 펴진 양면 Mat -> [Mat,...] 페이지들 (호출자가 delete)
+function splitPages(m, mode) {
+  if (mode === 'single') return [m];
+  const gx = mode === 'center' ? Math.round(m.cols / 2) : findGutter(m);
+  const L = m.roi(new cv.Rect(0, 0, gx, m.rows)).clone();
+  const R = m.roi(new cv.Rect(gx, 0, m.cols - gx, m.rows)).clone();
+  m.delete();
+  return [L, R];
+}
+
+function resizeMax(m, maxW) {
+  if (m.cols <= maxW) return m;
+  const out = new cv.Mat();
+  cv.resize(m, out, new cv.Size(maxW, Math.round(m.rows * maxW / m.cols)), 0, 0, cv.INTER_AREA);
+  m.delete();
+  return out;
+}
+
+
+</script>
+<script>
+"use strict";
+// ================= 유틸 =================
+const $ = id => document.getElementById(id);
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+const DPI = 200; // PDF 페이지 크기 기준
+function toast(msg, ms = 1800) { const t = $('toast'); t.textContent = msg; t.style.opacity = 1; clearTimeout(toast._t); toast._t = setTimeout(() => t.style.opacity = 0, ms); }
+function show(id) { document.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.id === id)); }
+function loadScript(src) { return new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.async = true; s.onload = res; s.onerror = () => rej(new Error('load ' + src)); document.head.appendChild(s); }); }
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+// ================= 설정 =================
+const DEF = { split: 'auto', rot: 0, maxW: 1600, mode: 'color', hold: 900, sound: true };
+let S = { ...DEF };
+try { S = { ...DEF, ...JSON.parse(localStorage.getItem('bs_set') || '{}') }; } catch (e) {}
+function saveSet() { try { localStorage.setItem('bs_set', JSON.stringify(S)); } catch (e) {} }
+
+// ================= IndexedDB =================
+let db;
+function openDB() {
+  return new Promise((res, rej) => {
+    const r = indexedDB.open('bookscan', 1);
+    r.onupgradeneeded = () => {
+      const d = r.result;
+      d.createObjectStore('books', { keyPath: 'id' });
+      const p = d.createObjectStore('pages', { keyPath: 'id' });
+      p.createIndex('book', 'bookId');
+    };
+    r.onsuccess = () => { db = r.result; res(); };
+    r.onerror = () => rej(r.error);
+  });
+}
+function tx(store, mode, fn) {
+  return new Promise((res, rej) => {
+    const t = db.transaction(store, mode); const st = t.objectStore(store);
+    let out; const rq = fn(st); if (rq) rq.onsuccess = () => out = rq.result;
+    t.oncomplete = () => res(out); t.onerror = () => rej(t.error); t.onabort = () => rej(t.error);
+  });
+}
+const getBook = id => tx('books', 'readonly', s => s.get(id));
+const putBook = b => { b.updated = Date.now(); return tx('books', 'readwrite', s => s.put(b)); };
+const allBooks = () => tx('books', 'readonly', s => s.getAll());
+const getPage = id => tx('pages', 'readonly', s => s.get(id));
+const putPage = p => tx('pages', 'readwrite', s => s.put(p));
+const delPage = id => tx('pages', 'readwrite', s => s.delete(id));
+const bookPages = bid => tx('pages', 'readonly', s => s.index('book').getAll(bid));
+
+// ================= OpenCV 로드 =================
+let cvReady = false;
+async function initCV() {
+  const srcs = ['https://cdn.jsdelivr.net/npm/@techstark/opencv-js@4.10.0-release.1/dist/opencv.js', 'https://docs.opencv.org/4.10.0/opencv.js'];
+  for (const s of srcs) { try { await loadScript(s); break; } catch (e) { console.warn(e); } }
+  if (typeof cv === 'undefined') throw new Error('OpenCV 로드 실패');
+  // 주의: cv는 thenable이라 await 하면 안 됨
+  await new Promise(res => {
+    if (cv.Mat) return res();
+    cv.onRuntimeInitialized = () => res();
+    const iv = setInterval(() => { if (cv.Mat) { clearInterval(iv); res(); } }, 150);
+  });
+  cvReady = true;
+}
+
+// ================= 책장 =================
+let curBook = null;
+async function renderLib() {
+  const books = (await allBooks()).sort((a, b) => b.updated - a.updated);
+  const el = $('bookList');
+  if (!books.length) { el.innerHTML = '<div class="empty">아직 책이 없어.<br>＋ 새 책 눌러서 시작해.<br><br><span class="sub">팁: 공유 버튼 → "홈 화면에 추가" 하면 앱처럼 써.</span></div>'; return; }
+  el.innerHTML = '';
+  for (const b of books) {
+    const d = document.createElement('div'); d.className = 'book';
+    let cov = '';
+    if (b.order.length) { const p = await getPage(b.order[0]); if (p) cov = URL.createObjectURL(p.thumb); }
+    d.innerHTML = `<div class="cov" style="background-image:url(${cov})"></div><div style="flex:1;min-width:0"><div class="t">${esc(b.title)}</div><div class="sub">${b.order.length}쪽 · ${new Date(b.updated).toLocaleDateString('ko-KR')}</div></div><div class="sub">›</div>`;
+    d.onclick = () => openBook(b.id);
+    el.appendChild(d);
+  }
+}
+$('btnNewBook').onclick = () => askText('새 책 이름', '', async t => {
+  const b = { id: uid(), title: t || '제목 없음', created: Date.now(), order: [], insertAt: null };
+  await putBook(b); openBook(b.id);
+});
+
+// ================= 책 상세 =================
+let thumbUrls = [];
+async function openBook(id) {
+  curBook = await getBook(id); show('bookv'); await renderBook();
+}
+async function renderBook() {
+  const b = curBook; $('bookTitle').textContent = b.title;
+  thumbUrls.forEach(u => URL.revokeObjectURL(u)); thumbUrls = [];
+  const pages = Object.fromEntries((await bookPages(b.id)).map(p => [p.id, p]));
+  b.order = b.order.filter(id => pages[id]);
+  const ocrN = b.order.filter(id => pages[id].ocrPdf).length;
+  $('bookInfo').textContent = `${b.order.length}쪽 · OCR ${ocrN}/${b.order.length}`;
+  const ins = b.insertAt;
+  $('insBanner').innerHTML = ins != null ? `<div class="banner">⤵︎ 다음 스캔은 ${ins}쪽 뒤에 끼워 넣어져<span style="flex:1"></span><button id="btnInsOff">해제</button></div>` : '';
+  if (ins != null) $('btnInsOff').onclick = async () => { b.insertAt = null; await putBook(b); renderBook(); };
+  const g = $('pageGrid'); g.innerHTML = '';
+  if (!b.order.length) g.innerHTML = '<div class="empty" style="grid-column:1/-1">📷 스캔 눌러서 찍어봐</div>';
+  b.order.forEach((pid, i) => {
+    const p = pages[pid]; const u = URL.createObjectURL(p.thumb); thumbUrls.push(u);
+    const d = document.createElement('div'); d.className = 'pg' + (ins === i + 1 ? ' ins' : '');
+    d.innerHTML = `<img src="${u}" loading="lazy"><span class="n">${i + 1}</span>${p.ocrPdf ? '<span class="o">T</span>' : ''}`;
+    d.onclick = () => openViewer(i);
+    g.appendChild(d);
+  });
+}
+$('btnBack').onclick = () => { show('lib'); renderLib(); };
+$('btnBookMenu').onclick = () => sheet(`<h3>${esc(curBook.title)}</h3>
+  <div class="bar" style="padding:0;flex-direction:column">
+  <button id="mRen">이름 바꾸기</button>
+  <button id="mImp">🖼 사진 앨범에서 불러오기</button>
+  <button id="mTxt">텍스트(.txt)로 내보내기 (OCR된 쪽만)</button>
+  <button id="mOcrClr">OCR 결과 지우기</button>
+  <button class="bad" id="mDel">책 삭제</button></div>`, () => {
+  $('mRen').onclick = () => askText('이름 바꾸기', curBook.title, async t => { curBook.title = t || curBook.title; await putBook(curBook); renderBook(); });
+  $('mImp').onclick = () => { closeSheet(); $('fileIn').click(); };
+  $('mTxt').onclick = () => { closeSheet(); exportTxt(); };
+  $('mOcrClr').onclick = async () => { if (!confirm('OCR 결과를 전부 지울까?')) return; for (const id of curBook.order) { const p = await getPage(id); p.ocrPdf = null; p.text = null; await putPage(p); } closeSheet(); renderBook(); };
+  $('mDel').onclick = async () => { if (!confirm(`"${curBook.title}" 를 통째로 지울까? 되돌릴 수 없어.`)) return; for (const id of curBook.order) await delPage(id); await tx('books', 'readwrite', s => s.delete(curBook.id)); closeSheet(); show('lib'); renderLib(); };
+});
+
+// ================= 시트/입력 =================
+function sheet(html, bind) { $('sheet').innerHTML = html; $('sheetBg').classList.add('on'); bind && bind(); }
+function closeSheet() { $('sheetBg').classList.remove('on'); }
+$('sheetBg').onclick = e => { if (e.target.id === 'sheetBg' && !sheet.locked) closeSheet(); };
+function askText(title, val, cb) {
+  sheet(`<h3>${title}</h3><input type="text" id="askIn" value="${esc(val)}"><div class="bar" style="padding:12px 0 0"><button class="ghost" id="askNo">취소</button><button class="acc" id="askOk">확인</button></div>`, () => {
+    const i = $('askIn'); setTimeout(() => i.focus(), 50);
+    $('askNo').onclick = closeSheet;
+    $('askOk').onclick = () => { closeSheet(); cb(i.value.trim()); };
+    i.onkeydown = e => { if (e.key === 'Enter') $('askOk').click(); };
+  });
+}
+function segOpt(label, key, opts) {
+  return `<div class="opt"><div class="l">${label}</div><div class="seg" data-k="${key}">${opts.map(([v, t]) => `<button data-v="${v}" class="${String(S[key]) === String(v) ? 'on' : ''}">${t}</button>`).join('')}</div></div>`;
+}
+function openSettings() {
+  sheet(`<h3>스캔 설정</h3>
+    ${segOpt('양면 분리', 'split', [['auto', '자동(접힘선)'], ['center', '정가운데'], ['single', '분리 안 함']])}
+    ${segOpt('회전 (책이 옆으로 누워 보이면)', 'rot', [[0, '0°'], [90, '90°'], [180, '180°'], [270, '270°']])}
+    ${segOpt('색상', 'mode', [['color', '컬러'], ['gray', '흑백 선명'], ['bw', '문서(2색)']])}
+    ${segOpt('화질 (쪽 가로 픽셀)', 'maxW', [[1200, '1200 가벼움'], [1600, '1600 표준'], [2400, '2400 고화질']])}
+    ${segOpt('자동촬영 정지 대기', 'hold', [[600, '0.6초'], [900, '0.9초'], [1400, '1.4초']])}
+    ${segOpt('촬영음', 'sound', [[true, '켜기'], [false, '끄기']])}
+    <div class="sub" style="line-height:1.5">팁: 책장 넘기는 손이 화면에서 빠지고 멈추면 자동으로 찍혀. 배경이 책이랑 비슷한 색이면 네모를 못 찾을 수 있으니 어두운 천을 깔거나, 모서리를 손으로 맞추고 <b>고정</b> 눌러.</div>
+    <div class="bar" style="padding:12px 0 0"><button class="acc" id="setOk">닫기</button></div>`, () => {
+    $('sheet').querySelectorAll('.seg').forEach(sg => sg.onclick = e => {
+      const b = e.target.closest('button'); if (!b) return;
+      let v = b.dataset.v; const k = sg.dataset.k;
+      S[k] = typeof DEF[k] === 'number' ? +v : typeof DEF[k] === 'boolean' ? v === 'true' : v;
+      sg.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); saveSet();
+    });
+    $('setOk').onclick = closeSheet;
+  });
+}
+$('btnImportAll').onclick = openSettings;
+
+// ================= 페이지 저장 =================
+function matToBlob(m, q = 0.85) {
+  const c = document.createElement('canvas'); cv.imshow(c, m);
+  return new Promise(r => c.toBlob(b => r({ blob: b, canvas: c }), 'image/jpeg', q));
+}
+function thumbOf(canvas) {
+  const w = 200, h = Math.round(canvas.height * w / canvas.width);
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  c.getContext('2d').drawImage(canvas, 0, 0, w, h);
+  return new Promise(r => c.toBlob(r, 'image/jpeg', 0.7));
+}
+// 펴진 양면 Mat -> 페이지들 저장, 새 페이지 id 배열 반환
+async function savePagesFromWarp(warped) {
+  let m = rotateMat(warped, S.rot);
+  const parts = splitPages(m, S.split);
+  const ids = [];
+  for (let p of parts) {
+    p = resizeMax(p, S.maxW);
+    p = enhance(p, S.mode);
+    const { blob, canvas } = await matToBlob(p);
+    const page = { id: uid(), bookId: curBook.id, img: blob, thumb: await thumbOf(canvas), w: p.cols, h: p.rows, ocrPdf: null, text: null };
+    p.delete();
+    await putPage(page); ids.push(page.id);
+  }
+  const b = curBook;
+  if (b.insertAt != null) { b.order.splice(b.insertAt, 0, ...ids); b.insertAt += ids.length; }
+  else b.order.push(...ids);
+  await putBook(b);
+  return ids;
+}
+
+// ================= 스캔 =================
+const video = $('video'), ov = $('ov'), octx = ov.getContext('2d');
+const proc = document.createElement('canvas'), pctx = proc.getContext('2d', { willReadFrequently: true });
+const tiny = document.createElement('canvas'), tctx = tiny.getContext('2d', { willReadFrequently: true });
+const TW = 96;
+let stream = null, running = false, busy = false;
+let quad = null, quadSeen = 0, lastDet = null, jitter = 99, locked = false, autoOn = true;
+let moveTicks = 0, prevTiny = null, capTiny = null, stillMs = 0, sawMove = false, lastTick = 0, lastCap = 0, firstCap = true;
+let sessionStack = [], sessionCount = 0, drag = -1, wakeLock = null, actx = null;
+
+async function getWake() { try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch (e) {} }
+function dropWake() { try { wakeLock && wakeLock.release(); } catch (e) {} wakeLock = null; }
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && (running || ocrRunning)) getWake(); });
+
+function beep() {
+  if (!S.sound || !actx) return;
+  try { const o = actx.createOscillator(), g = actx.createGain(); o.frequency.value = 1320; g.gain.setValueAtTime(.15, actx.currentTime); g.gain.exponentialRampToValueAtTime(.001, actx.currentTime + .12); o.connect(g).connect(actx.destination); o.start(); o.stop(actx.currentTime + .13); } catch (e) {}
+}
+
+$('btnScan').onclick = startScan;
+async function startScan() {
+  if (!cvReady) { toast('엔진 아직 로딩 중…'); return; }
+  try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); actx.resume(); } catch (e) {}
+  show('scan'); setStatus('카메라 켜는 중', '');
+  const tries = [
+    { width: { ideal: 4032 }, height: { ideal: 3024 } },
+    { width: { ideal: 3840 }, height: { ideal: 2160 } },
+    { width: { ideal: 1920 }, height: { ideal: 1080 } }];
+  for (const t of tries) {
+    try { stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' }, ...t }, audio: false }); break; } catch (e) { stream = null; }
+  }
+  if (!stream) { setStatus('카메라 권한이 필요해', 'wait'); toast('설정 > Safari > 카메라 허용 확인해줘', 3500); return; }
+  video.srcObject = stream; await video.play().catch(() => {});
+  await new Promise(r => { if (video.videoWidth) r(); else video.onloadedmetadata = r; });
+  const vw = video.videoWidth, vh = video.videoHeight, sc = 480 / Math.max(vw, vh);
+  proc.width = Math.round(vw * sc); proc.height = Math.round(vh * sc);
+  quad = null; quadSeen = 0; lastDet = null; locked = false; prevTiny = null; capTiny = null; stillMs = 0; sawMove = false; firstCap = true;
+  sessionStack = []; sessionCount = 0; updLock(); updAuto(); $('cnt').textContent = '0장'; $('lastThumb').style.backgroundImage = '';
+  $('insTag').style.display = curBook.insertAt != null ? 'block' : 'none';
+  $('insTag').textContent = `⤵︎ ${curBook.insertAt}쪽 뒤에 끼워넣는 중`;
+  running = true; getWake(); resizeOv(); loop();
+}
+function stopScan() {
+  running = false; dropWake();
+  if (stream) stream.getTracks().forEach(t => t.stop()); stream = null; video.srcObject = null;
+}
+$('btnScanClose').onclick = () => { stopScan(); show('bookv'); renderBook(); };
+$('btnScanSet').onclick = openSettings;
+$('btnAuto').onclick = () => { autoOn = !autoOn; updAuto(); stillMs = 0; };
+$('btnLock').onclick = () => { if (!quad) { toast('네모가 아직 없어. 화면에서 모서리를 끌어 맞춰도 돼'); setDefaultQuad(); } locked = !locked; updLock(); };
+function updAuto() { $('btnAuto').classList.toggle('on', autoOn); $('btnAuto').textContent = autoOn ? '자동 ON' : '자동 OFF'; }
+function updLock() { $('btnLock').classList.toggle('on', locked); $('btnLock').textContent = locked ? '🔒 고정됨' : '🔓 고정'; }
+function setStatus(t, cls) { const s = $('status'); s.textContent = t; s.className = 'pill ' + (cls || ''); }
+function setDefaultQuad() { const W = proc.width, H = proc.height, m = 0.1; quad = [{ x: W * m, y: H * m }, { x: W * (1 - m), y: H * m }, { x: W * (1 - m), y: H * (1 - m) }, { x: W * m, y: H * (1 - m) }]; }
+$('shutter').onclick = () => capture(true);
+$('lastThumb').onclick = async () => {
+  if (!sessionStack.length) return;
+  if (!confirm('방금 찍은 거 지울까?')) return;
+  const ids = sessionStack.pop();
+  for (const id of ids) await delPage(id);
+  curBook.order = curBook.order.filter(id => !ids.includes(id));
+  if (curBook.insertAt != null) curBook.insertAt -= ids.length;
+  await putBook(curBook); sessionCount -= ids.length; $('cnt').textContent = sessionCount + '장';
+  const lastIds = sessionStack[sessionStack.length - 1];
+  if (lastIds) { const p = await getPage(lastIds[lastIds.length - 1]); $('lastThumb').style.backgroundImage = `url(${URL.createObjectURL(p.thumb)})`; } else $('lastThumb').style.backgroundImage = '';
+  capTiny = null; firstCap = true; toast('삭제했어');
+};
+
+// 화면 <-> proc 좌표 변환 (object-fit: contain)
+function dispRect() {
+  const W = ov.clientWidth, H = ov.clientHeight, ar = proc.width / proc.height;
+  let w = W, h = W / ar; if (h > H) { h = H; w = H * ar; }
+  return { x: (W - w) / 2, y: (H - h) / 2, w, h, s: w / proc.width };
+}
+function resizeOv() { const d = devicePixelRatio || 1; ov.width = ov.clientWidth * d; ov.height = ov.clientHeight * d; octx.setTransform(d, 0, 0, d, 0, 0); }
+window.addEventListener('resize', () => running && resizeOv());
+
+ov.addEventListener('pointerdown', e => {
+  if (!quad) return;
+  const r = dispRect(), px = e.offsetX, py = e.offsetY;
+  let bi = -1, bd = 45;
+  quad.forEach((p, i) => { const d = Math.hypot(r.x + p.x * r.s - px, r.y + p.y * r.s - py); if (d < bd) { bd = d; bi = i; } });
+  if (bi >= 0) { drag = bi; ov.setPointerCapture(e.pointerId); locked = true; updLock(); }
+});
+ov.addEventListener('pointermove', e => {
+  if (drag < 0) return; const r = dispRect();
+  quad[drag] = { x: Math.min(proc.width, Math.max(0, (e.offsetX - r.x) / r.s)), y: Math.min(proc.height, Math.max(0, (e.offsetY - r.y) / r.s)) };
+});
+ov.addEventListener('pointerup', () => { drag = -1; stillMs = 0; });
+
+function drawOv(ready) {
+  const W = ov.clientWidth, H = ov.clientHeight; octx.clearRect(0, 0, W, H);
+  if (!quad) return;
+  const r = dispRect(), P = quad.map(p => ({ x: r.x + p.x * r.s, y: r.y + p.y * r.s }));
+  octx.beginPath(); P.forEach((p, i) => i ? octx.lineTo(p.x, p.y) : octx.moveTo(p.x, p.y)); octx.closePath();
+  const col = locked ? '#5ab0ff' : ready ? '#3ddc84' : '#ffb020';
+  octx.fillStyle = col + '22'; octx.fill(); octx.lineWidth = 3; octx.strokeStyle = col; octx.stroke();
+  // 가운데 분할선 가이드
+  if (S.split !== 'single') {
+    const rot = S.rot === 90 || S.rot === 270;
+    const a = rot ? mid(P[0], P[3]) : mid(P[0], P[1]), b = rot ? mid(P[1], P[2]) : mid(P[3], P[2]);
+    octx.setLineDash([6, 6]); octx.lineWidth = 1.5; octx.beginPath(); octx.moveTo(a.x, a.y); octx.lineTo(b.x, b.y); octx.stroke(); octx.setLineDash([]);
+  }
+  P.forEach(p => { octx.beginPath(); octx.arc(p.x, p.y, locked ? 13 : 8, 0, 7); octx.fillStyle = col; octx.fill(); octx.lineWidth = 2; octx.strokeStyle = '#fff'; octx.stroke(); });
+}
+const mid = (a, b) => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
+
+function tinyFrame() {
+  // 네모 영역(있으면)만 작게 잘라서 회색 배열로
+  let sx = 0, sy = 0, sw = proc.width, sh = proc.height;
+  if (quad) { const xs = quad.map(p => p.x), ys = quad.map(p => p.y); sx = Math.max(0, Math.min(...xs)); sy = Math.max(0, Math.min(...ys)); sw = Math.max(10, Math.max(...xs) - sx); sh = Math.max(10, Math.max(...ys) - sy); }
+  const th = 72; tiny.width = TW; tiny.height = th;
+  tctx.drawImage(proc, sx, sy, sw, sh, 0, 0, TW, th);
+  const d = tctx.getImageData(0, 0, TW, th).data, g = new Uint8Array(TW * th);
+  for (let i = 0; i < g.length; i++) g[i] = (d[i * 4] * 3 + d[i * 4 + 1] * 6 + d[i * 4 + 2]) / 10;
+  return g;
+}
+function tinyDiff(a, b) { if (!a || !b || a.length !== b.length) return 999; let s = 0; for (let i = 0; i < a.length; i++) s += Math.abs(a[i] - b[i]); return s / a.length; }
+
+const STILL = 2.2, MOVE = 7, PAGE_DIFF = 4;
+async function loop() {
+  if (!running) return;
+  const now = performance.now();
+  if (!busy && now - lastTick > 110 && video.readyState >= 2) {
+    const dt = lastTick ? Math.min(300, now - lastTick) : 0; lastTick = now;
+    pctx.drawImage(video, 0, 0, proc.width, proc.height);
+    // 1) 네모 인식
+    if (!locked && drag < 0) {
+      const src = cv.matFromImageData(pctx.getImageData(0, 0, proc.width, proc.height));
+      let q = null; try { q = detectQuad(src); } catch (e) { console.warn(e); } src.delete();
+      if (q) {
+        jitter = lastDet ? q.reduce((s, p, i) => s + Math.hypot(p.x - lastDet[i].x, p.y - lastDet[i].y), 0) / 4 : 99;
+        lastDet = q; quadSeen = Math.min(quadSeen + 1, 10);
+        const diag = Math.hypot(proc.width, proc.height);
+        if (!quad || jitter > diag * 0.06) { if (quadSeen >= 2 || !quad) quad = q.map(p => ({ ...p })); }
+        else quad = quad.map((p, i) => ({ x: p.x * 0.6 + q[i].x * 0.4, y: p.y * 0.6 + q[i].y * 0.4 }));
+      } else { quadSeen = Math.max(0, quadSeen - 2); jitter = 99; if (quadSeen === 0) quad = null; }
+    }
+    const quadOk = locked ? !!quad : (quad && quadSeen >= 3 && jitter < 6);
+    // 2) 움직임 감지
+    const tf = tinyFrame(); const motion = tinyDiff(tf, prevTiny); prevTiny = tf;
+    if (motion > MOVE) { if (++moveTicks >= 2) sawMove = true; } else moveTicks = 0;
+    if (motion < STILL && quadOk) stillMs += dt; else stillMs = 0;
+    const cdiff = tinyDiff(tf, capTiny);
+    // 손이 지나가는 큰 움직임(책장 넘김) 후 멈추면 촬영. 손 없이 내용이 크게 바뀌어도 촬영.
+    const pageChanged = firstCap || (sawMove && cdiff > 0.25) || cdiff > PAGE_DIFF;
+    const prog = Math.min(1, stillMs / S.hold);
+    // 3) 상태 표시 & 자동 촬영
+    if (!quad) setStatus('책 네모 찾는 중…', 'wait');
+    else if (!autoOn) setStatus(locked ? '고정됨 · 수동 촬영' : '인식됨 · 수동 촬영', 'ok');
+    else if (motion >= STILL) setStatus(sawMove && !firstCap ? '넘기는 중…' : '흔들림 — 멈춰줘', 'wait');
+    else if (!pageChanged) setStatus('책장 넘겨줘 →', 'ok');
+    else setStatus('찍는다…', 'ok');
+    $('ringC').style.strokeDashoffset = 276.5 * (1 - (autoOn && pageChanged && quadOk ? prog : 0));
+    drawOv(quadOk);
+    if (autoOn && quadOk && pageChanged && stillMs >= S.hold && now - lastCap > 900) await capture(false, tf);
+  } else if (drag >= 0) drawOv(true);
+  requestAnimationFrame(loop);
+}
+
+async function capture(manual, tf) {
+  if (busy || !running) return; busy = true;
+  try {
+    const vw = video.videoWidth, vh = video.videoHeight;
+    const c = document.createElement('canvas'); c.width = vw; c.height = vh;
+    c.getContext('2d').drawImage(video, 0, 0, vw, vh);
+    $('flash').style.opacity = .7; setTimeout(() => $('flash').style.opacity = 0, 120); beep();
+    setStatus('저장 중…', 'ok');
+    await sleep(30);
+    const full = cv.imread(c); c.width = c.height = 0;
+    let warped;
+    if (quad) { const k = vw / proc.width; warped = warpQuad(full, quad.map(p => ({ x: p.x * k, y: p.y * k }))); full.delete(); }
+    else warped = full;
+    const ids = await savePagesFromWarp(warped);
+    sessionStack.push(ids); sessionCount += ids.length; $('cnt').textContent = sessionCount + '장';
+    const p = await getPage(ids[ids.length - 1]); $('lastThumb').style.backgroundImage = `url(${URL.createObjectURL(p.thumb)})`;
+    capTiny = tf || tinyFrame(); sawMove = false; moveTicks = 0; stillMs = 0; firstCap = false; lastCap = performance.now();
+  } catch (e) { console.error(e); toast('저장 실패: ' + e.message, 3000); }
+  busy = false;
+}
+
+// ================= 앨범에서 불러오기 =================
+$('fileIn').onchange = async e => {
+  const files = [...e.target.files]; e.target.value = ''; if (!files.length) return;
+  if (!cvReady) { toast('엔진 로딩 중…'); return; }
+  sheet.locked = true;
+  sheet(`<h3>사진 불러오는 중</h3><div class="prog"><i id="impBar"></i></div><div class="sub" id="impTxt"></div>`);
+  let n = 0;
+  for (const f of files) {
+    $('impTxt').textContent = `${++n} / ${files.length}`; $('impBar').style.width = (n / files.length * 100) + '%';
+    try {
+      const bmp = await createImageBitmap(f);
+      const c = document.createElement('canvas'); c.width = bmp.width; c.height = bmp.height; c.getContext('2d').drawImage(bmp, 0, 0);
+      const sc = 480 / Math.max(c.width, c.height), sm = document.createElement('canvas'); sm.width = Math.round(c.width * sc); sm.height = Math.round(c.height * sc);
+      sm.getContext('2d').drawImage(c, 0, 0, sm.width, sm.height);
+      const smat = cv.imread(sm); const q = detectQuad(smat); smat.delete();
+      const full = cv.imread(c); c.width = 0;
+      let w = full; if (q) { w = warpQuad(full, q.map(p => ({ x: p.x / sc, y: p.y / sc }))); full.delete(); }
+      await savePagesFromWarp(w);
+    } catch (err) { console.error(err); }
+  }
+  sheet.locked = false; closeSheet(); renderBook(); toast('불러오기 완료');
+};
+
+// ================= 뷰어 =================
+let vIdx = 0, vUrl = null;
+async function openViewer(i) { vIdx = i; show('viewer'); await renderViewer(); }
+async function renderViewer() {
+  const b = curBook; if (!b.order.length) { show('bookv'); return renderBook(); }
+  vIdx = Math.max(0, Math.min(vIdx, b.order.length - 1));
+  const p = await getPage(b.order[vIdx]);
+  if (vUrl) URL.revokeObjectURL(vUrl); vUrl = URL.createObjectURL(p.img); $('vimg').src = vUrl;
+  $('vTitle').textContent = `${vIdx + 1} / ${b.order.length}쪽${p.ocrPdf ? ' · OCR됨' : ''}`;
+}
+$('btnVBack').onclick = () => { show('bookv'); renderBook(); };
+async function movePage(d) {
+  const o = curBook.order, j = vIdx + d; if (j < 0 || j >= o.length) return;
+  [o[vIdx], o[j]] = [o[j], o[vIdx]]; vIdx = j; await putBook(curBook); renderViewer();
+}
+$('btnVPrev').onclick = () => movePage(-1);
+$('btnVNext').onclick = () => movePage(1);
+$('btnVDel').onclick = async () => {
+  if (!confirm(`${vIdx + 1}쪽 지울까?`)) return;
+  const id = curBook.order[vIdx]; await delPage(id); curBook.order.splice(vIdx, 1);
+  if (curBook.insertAt != null && curBook.insertAt > vIdx) curBook.insertAt--;
+  await putBook(curBook); renderViewer();
+};
+$('btnVIns').onclick = async () => { curBook.insertAt = vIdx + 1; await putBook(curBook); toast(`${vIdx + 1}쪽 뒤에 이어찍기 설정`); show('bookv'); renderBook(); };
+$('btnVRot').onclick = async () => {
+  const p = await getPage(curBook.order[vIdx]);
+  const bmp = await createImageBitmap(p.img); const c = document.createElement('canvas'); c.width = bmp.height; c.height = bmp.width;
+  const x = c.getContext('2d'); x.translate(c.width, 0); x.rotate(Math.PI / 2); x.drawImage(bmp, 0, 0);
+  p.img = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.88)); p.thumb = await thumbOf(c); p.w = c.width; p.h = c.height; p.ocrPdf = null; p.text = null;
+  await putPage(p); renderViewer();
+};
+// 스와이프로 넘기기
+let sx0 = null;
+$('vimg').addEventListener('touchstart', e => sx0 = e.touches[0].clientX, { passive: true });
+$('vimg').addEventListener('touchend', e => { if (sx0 == null) return; const dx = e.changedTouches[0].clientX - sx0; sx0 = null; if (Math.abs(dx) > 60) { vIdx += dx < 0 ? 1 : -1; renderViewer(); } });
+
+// ================= PDF 내보내기 =================
+let pdfLibP = null;
+const needPdfLib = () => pdfLibP || (pdfLibP = loadScript('https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js'));
+$('btnPdf').onclick = async () => {
+  const b = curBook; if (!b.order.length) return toast('페이지가 없어');
+  sheet.locked = true;
+  sheet(`<h3>PDF 만드는 중</h3><div class="prog"><i id="pBar"></i></div><div class="sub" id="pTxt">준비 중…</div><div id="pOut"></div>`);
+  try {
+    await needPdfLib();
+    const { PDFDocument } = PDFLib;
+    const doc = await PDFDocument.create(); doc.setTitle(b.title); doc.setCreator('북스캔');
+    let i = 0, ocrN = 0;
+    for (const id of b.order) {
+      const p = await getPage(id); i++;
+      $('pTxt').textContent = `${i} / ${b.order.length}쪽`; $('pBar').style.width = (i / b.order.length * 100) + '%';
+      if (p.ocrPdf) {
+        const src = await PDFDocument.load(await p.ocrPdf.arrayBuffer());
+        const [cp] = await doc.copyPages(src, [0]); doc.addPage(cp); ocrN++;
+      } else {
+        const img = await doc.embedJpg(await p.img.arrayBuffer());
+        const pg = doc.addPage([img.width * 72 / DPI, img.height * 72 / DPI]);
+        pg.drawImage(img, { x: 0, y: 0, width: pg.getWidth(), height: pg.getHeight() });
+      }
+      if (i % 10 === 0) await sleep(0);
+    }
+    $('pTxt').textContent = '파일로 묶는 중…';
+    const bytes = await doc.save();
+    const name = b.title.replace(/[\\/:*?"<>|]/g, '_') + '.pdf';
+    const file = new File([bytes], name, { type: 'application/pdf' });
+    const mb = (bytes.length / 1048576).toFixed(1);
+    sheet.locked = false;
+    $('pTxt').innerHTML = `완료! ${b.order.length}쪽 · ${mb}MB · 검색가능 ${ocrN}쪽<br>아래 버튼 → "파일에 저장" 또는 "Books"/"PDF 뷰어"로 보내서 아이패드에서 열어.`;
+    $('pOut').innerHTML = `<div class="bar" style="padding:12px 0 0;flex-direction:column"><button class="acc" id="pShare">공유 / 파일에 저장</button><button id="pDl">다운로드</button><button class="ghost" id="pClose">닫기</button></div>`;
+    $('pShare').onclick = async () => {
+      try { if (navigator.canShare && navigator.canShare({ files: [file] })) await navigator.share({ files: [file], title: b.title }); else $('pDl').click(); }
+      catch (e) { if (e.name !== 'AbortError') toast('공유 실패, 다운로드로 해봐'); }
+    };
+    $('pDl').onclick = () => { const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 60000); };
+    $('pClose').onclick = closeSheet;
+  } catch (e) { console.error(e); sheet.locked = false; $('pTxt').textContent = '실패: ' + e.message; }
+};
+
+async function exportTxt() {
+  let out = '', n = 0;
+  for (let i = 0; i < curBook.order.length; i++) { const p = await getPage(curBook.order[i]); if (p.text) { out += `\n\n===== ${i + 1}쪽 =====\n` + p.text; n++; } }
+  if (!n) return toast('OCR된 쪽이 없어. 먼저 OCR 돌려줘');
+  const file = new File([out.trim()], curBook.title + '.txt', { type: 'text/plain' });
+  try { await navigator.share({ files: [file] }); } catch (e) { const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = file.name; a.click(); }
+}
+
+// ================= OCR (폰 안에서) =================
+let ocrRunning = false, ocrStop = false, tessP = null;
+const needTess = () => tessP || (tessP = loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js'));
+$('btnOcr').onclick = () => {
+  const todo = curBook.order.length;
+  if (!todo) return toast('페이지가 없어');
+  sheet(`<h3>OCR (글자 인식)</h3>
+    <div class="sub" style="line-height:1.6">한글+영어를 인식해서 PDF에 <b>검색·복사 가능한 글자</b>를 입혀. 폰에서 돌리면 한 쪽에 10~30초쯤 걸려. 중간에 멈춰도 다음에 이어서 해. 화면은 켜둔 채로 둬.<br>처음 한 번은 한글 데이터(약 10MB) 받느라 좀 걸려.</div>
+    <div class="prog"><i id="oBar"></i></div><div class="sub" id="oTxt"></div>
+    <div class="bar" style="padding:12px 0 0"><button class="ghost" id="oClose">닫기</button><button class="acc" id="oGo">시작</button></div>`, () => {
+    $('oClose').onclick = () => { if (ocrRunning) { ocrStop = true; $('oTxt').textContent = '이번 쪽 끝나면 멈출게…'; } else closeSheet(); };
+    $('oGo').onclick = runOcr;
+    refreshOcrInfo();
+  });
+};
+async function refreshOcrInfo() {
+  let done = 0; for (const id of curBook.order) { const p = await getPage(id); if (p.ocrPdf) done++; }
+  $('oTxt').textContent = `완료 ${done} / ${curBook.order.length}쪽`; $('oBar').style.width = (done / curBook.order.length * 100) + '%';
+  if (done === curBook.order.length) { $('oGo').disabled = true; $('oGo').textContent = '전부 완료'; }
+}
+async function runOcr() {
+  if (ocrRunning) return; ocrRunning = true; ocrStop = false; sheet.locked = true;
+  $('oGo').disabled = true; $('oClose').textContent = '멈추기'; getWake();
+  let worker;
+  try {
+    $('oTxt').textContent = 'OCR 엔진 불러오는 중…';
+    await needTess();
+    worker = await Tesseract.createWorker('kor+eng', 1, {
+      logger: m => { if (m.status && m.status.includes('loading')) $('oTxt').textContent = `엔진 준비 중… ${Math.round((m.progress || 0) * 100)}%`; }
+    });
+    await worker.setParameters({ user_defined_dpi: String(DPI), preserve_interword_spaces: '1' });
+    const order = [...curBook.order]; let done = 0;
+    for (let i = 0; i < order.length; i++) {
+      const p = await getPage(order[i]); if (!p) continue;
+      if (p.ocrPdf) { done++; continue; }
+      if (ocrStop) break;
+      $('oTxt').textContent = `${i + 1}쪽 인식 중… (완료 ${done}/${order.length})`;
+      const t0 = Date.now();
+      const r = await worker.recognize(p.img, { pdfTitle: curBook.title }, { pdf: true, text: true });
+      p.ocrPdf = new Blob([new Uint8Array(r.data.pdf)], { type: 'application/pdf' }); p.text = r.data.text;
+      await putPage(p); done++;
+      $('oBar').style.width = (done / order.length * 100) + '%';
+      $('oTxt').textContent = `${i + 1}쪽 완료 (${((Date.now() - t0) / 1000).toFixed(0)}초) · ${done}/${order.length}`;
+    }
+    $('oTxt').textContent = ocrStop ? `멈춤 · ${done}/${order.length}쪽 완료 (다음에 이어서 돼)` : `전부 완료! 이제 📄 PDF 누르면 검색 가능한 PDF로 나와.`;
+  } catch (e) { console.error(e); $('oTxt').textContent = 'OCR 실패: ' + e.message; }
+  try { worker && await worker.terminate(); } catch (e) {}
+  ocrRunning = false; sheet.locked = false; dropWake();
+  $('oClose').textContent = '닫기'; $('oClose').onclick = () => { closeSheet(); renderBook(); };
+}
+
+// ================= 시작 =================
+(function makeIcon() {
+  const c = document.createElement('canvas'); c.width = c.height = 180; const x = c.getContext('2d');
+  x.fillStyle = '#0e0f11'; x.fillRect(0, 0, 180, 180);
+  x.fillStyle = '#3ddc84'; x.beginPath(); x.moveTo(30, 50); x.lineTo(88, 40); x.lineTo(88, 140); x.lineTo(30, 150); x.fill();
+  x.fillStyle = '#2bb56a'; x.beginPath(); x.moveTo(150, 50); x.lineTo(92, 40); x.lineTo(92, 140); x.lineTo(150, 150); x.fill();
+  $('touchIcon').href = c.toDataURL('image/png');
+})();
+(async () => {
+  try { await openDB(); } catch (e) { $('loadMsg').textContent = '저장소 열기 실패: ' + e.message; return; }
+  try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch (e) {}
+  renderLib();
+  $('loading').classList.add('off');
+  try { await initCV(); } catch (e) { toast('스캔 엔진 로드 실패. 인터넷 확인 후 새로고침', 4000); }
+})();
+</script>
+</body>
+</html>
